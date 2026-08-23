@@ -3,7 +3,6 @@
 <picture>
   <img src="./resources/logo.png" alt="Oink Logo" height="80" />
 </picture>
-
 # Oink
 
 <p align="center">
