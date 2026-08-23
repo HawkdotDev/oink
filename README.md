@@ -1,7 +1,7 @@
 <div align="center">
 
 <h1 align="center">
-  <img src="./resources/logo.png" alt="Oink Logo" height="36" /> Oink
+  <img src="./resources/logo.png" alt="Oink Logo" height="40" /> Oink
 </h1>
 
 <p align="center">
