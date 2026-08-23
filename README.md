@@ -1,7 +1,7 @@
 <div align="center">
 
 <h1 align="center">
-  <img src="./resources/logo.png" alt="Oink Logo" width="36" height="36" align="absmiddle" /> Oink
+  <img src="./resources/logo.png" alt="Oink Logo" height="26" /> Oink
 </h1>
 
 <p align="center">
@@ -24,6 +24,10 @@
   <a href="#project-architecture">Architecture</a> •
   <a href="#keyboard-shortcuts">Shortcuts</a> •
   <a href="#contributing">Contributing</a>
+</p>
+
+<p align="center">
+  <img src="./resources/screenshot.png" alt="Oink Workspace Screenshot" width="100%" />
 </p>
 
 </div>
