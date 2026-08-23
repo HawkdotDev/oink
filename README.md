@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1 align="center">
+<h1 align="center" justify="center">
   <img src="./resources/logo.png" alt="Oink Logo" height="40" /> Oink
 </h1>
 
