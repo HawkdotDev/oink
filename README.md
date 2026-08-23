@@ -1,6 +1,8 @@
 <div align="center">
 
-# <img src="./resources/logo.png" width="48" height="48" alt="Oink Logo" align="center" /> Oink
+<h1 align="center">
+  <img src="./resources/logo.png" alt="Oink Logo" width="42" height="42" align="middle" /> Oink
+</h1>
 
 <p align="center">
   <strong>Local-First • Hybrid Block-Markdown Knowledge Base • Canvas Graph Visualizer</strong>
