@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy } from 'react'
 import { Smile, Image, AppWindow, ListTree, X, Minimize2 } from 'lucide-react'
 import BlockEditor from './components/BlockEditor'
 import EmojiPicker from './components/EmojiPicker'
@@ -109,6 +109,39 @@ export default function App(): React.JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     () => savedState.sidebarCollapsed ?? false
   )
+  const [isSidebarHoverPeeked, setIsSidebarHoverPeeked] = useState<boolean>(false)
+  const sidebarPeekTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleSidebarHoverEnter = useCallback((): void => {
+    if (sidebarPeekTimeoutRef.current) {
+      clearTimeout(sidebarPeekTimeoutRef.current)
+      sidebarPeekTimeoutRef.current = null
+    }
+    if (sidebarCollapsed) {
+      setIsSidebarHoverPeeked(true)
+    }
+  }, [sidebarCollapsed])
+
+  const handleSidebarHoverLeave = useCallback((): void => {
+    if (sidebarPeekTimeoutRef.current) {
+      clearTimeout(sidebarPeekTimeoutRef.current)
+    }
+    sidebarPeekTimeoutRef.current = setTimeout(() => {
+      setIsSidebarHoverPeeked(false)
+    }, 220)
+  }, [])
+
+  const handleToggleSidebar = useCallback((): void => {
+    if (sidebarPeekTimeoutRef.current) {
+      clearTimeout(sidebarPeekTimeoutRef.current)
+      sidebarPeekTimeoutRef.current = null
+    }
+    setIsSidebarHoverPeeked(false)
+    setSidebarCollapsed((p) => !p)
+  }, [])
+
+  const effectiveSidebarCollapsed = sidebarCollapsed && !isSidebarHoverPeeked
+
   const [showRightSidebar, setShowRightSidebar] = useState<boolean>(
     () => savedState.showRightSidebar ?? false
   )
@@ -1162,7 +1195,7 @@ export default function App(): React.JSX.Element {
         onToggleViewMode={(): void => setViewMode((m) => (m === 'graph' ? 'editor' : 'graph'))}
         setViewMode={setViewMode}
         sidebarView={sidebarView}
-        sidebarCollapsed={sidebarCollapsed}
+        sidebarCollapsed={effectiveSidebarCollapsed}
         onTogglePluginsView={handleTogglePluginsView}
         onSwitchToFiles={handleSwitchToFiles}
         enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
@@ -1189,10 +1222,17 @@ export default function App(): React.JSX.Element {
       {/* ====== 2. SUB-HEADER ACTIONS & BREADCRUMBS BAR (Full width above sidebar) ====== */}
       <SubHeader
         sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={(): void => setSidebarCollapsed((p) => !p)}
+        onToggleSidebar={handleToggleSidebar}
+        onSidebarHoverEnter={handleSidebarHoverEnter}
+        onSidebarHoverLeave={handleSidebarHoverLeave}
         workspacePath={workspacePath}
         workspaceName={workspaceName}
         activeFilePath={activeFilePath}
+        openFiles={openFiles}
+        unsavedFiles={unsavedFiles}
+        fileIcons={fileIcons}
+        onTabSelect={handleTabSelect}
+        onTabClose={handleTabClose}
         onOpenWorkspace={handleOpenWorkspace}
         autoSaveEnabled={autoSaveEnabled}
         onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
@@ -1242,7 +1282,7 @@ export default function App(): React.JSX.Element {
         {/* Sidebar Panel */}
         <Sidebar
           activeView={sidebarView}
-          sidebarCollapsed={sidebarCollapsed}
+          sidebarCollapsed={effectiveSidebarCollapsed}
           sidebarWidth={sidebarWidth}
           isResizing={isResizingLeft}
           workspacePath={workspacePath}
@@ -1265,10 +1305,12 @@ export default function App(): React.JSX.Element {
           onTogglePlugin={handleTogglePlugin}
           onOpenSettings={(): void => setShowSettingsModal(true)}
           onSwitchView={setSidebarView}
+          onMouseEnter={handleSidebarHoverEnter}
+          onMouseLeave={handleSidebarHoverLeave}
         />
 
         {/* Editor Workspace & Split Area */}
-        <div className={`editor-workspace ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div className={`editor-workspace ${effectiveSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           {viewMode !== 'graph' && showTabs && (
             <div className="editor-top-nav">
               <TabBar

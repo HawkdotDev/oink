@@ -14,7 +14,7 @@ import {
   Blocks
 } from 'lucide-react'
 import PluginsWidget from './layout/PluginsWidget'
-import oinkLogo from '../assets/oink.png'
+import oinkLogo from '../assets/logo.png'
 
 interface UserSettings {
   // General

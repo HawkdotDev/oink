@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Minus, Square, X, Bell, Settings, FileText, Network, Blocks } from 'lucide-react'
-import oinkLogo from '../../assets/oink.png'
+import oinkLogo from '../../assets/logo.png'
 import { ViewMode, WidgetState } from '../../types'
 import WidgetsMenu from './subheader/WidgetsMenu'
 import ViewModeMenu from './subheader/ViewModeMenu'
@@ -131,166 +131,175 @@ function TopHeader({
         {/* Vertical Pipe Separator */}
         <div className="header-pipe-separator" />
 
-        {/* 1. File Editor Tab */}
-        <button
-          className={`action-pill-btn ${viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed) ? 'active' : ''}`}
-          onClick={(): void => {
-            if (onSwitchToFiles) onSwitchToFiles()
-            if (setViewMode) setViewMode('editor')
-            else if (viewMode === 'graph') onToggleViewMode()
-          }}
-          title="Document Editor & File View"
-        >
-          <FileText
-            size={13}
-            className={
-              viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed)
-                ? 'text-zinc-200'
-                : 'text-zinc-400'
-            }
-          />
-          <span>Files</span>
-        </button>
-
-        {/* 2. Knowledge Graph Tab */}
-        <button
-          className={`action-pill-btn ${viewMode === 'graph' ? 'active' : ''}`}
-          onClick={(): void => {
-            if (setViewMode) setViewMode('graph')
-            else if (viewMode === 'editor') onToggleViewMode()
-          }}
-          title="Knowledge Graph View"
-        >
-          <Network size={13} className={viewMode === 'graph' ? 'text-zinc-200' : 'text-zinc-400'} />
-          <span>Graph</span>
-        </button>
-
-        {/* Divider between Graph and the rest of tabs */}
-        <div className="header-pipe-separator opacity-40" />
-
-        {/* 3. Document View Options Dropdown */}
-        <ViewModeMenu
-          showTabs={showTabs}
-          onToggleTabs={onToggleTabs}
-          showRightSidebar={showRightSidebar}
-          onToggleRightSidebar={onToggleRightSidebar}
-          showCover={showCover}
-          showIcon={showIcon}
-          showFileName={showFileName}
-          isOnlyThisFile={isOnlyThisFile}
-          activeFilePath={activeFilePath}
-          onToggleCover={onToggleCover}
-          onToggleIcon={onToggleIcon}
-          onToggleFileName={onToggleFileName}
-          onToggleOnlyThisFile={onToggleOnlyThisFile}
-        />
-
-        {/* 4. Plugins Button */}
-        {onTogglePluginsView && (
+        {/* Floating Segmented Navigation Cluster */}
+        <div className="header-segmented-cluster">
+          {/* 1. File Editor Tab */}
           <button
-            className={`action-pill-btn ${sidebarView === 'plugins' && !sidebarCollapsed ? 'active' : ''}`}
-            onClick={onTogglePluginsView}
-            title="Toggle Plugins & Extensions (replaces File View)"
+            className={`action-pill-btn ${viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed) ? 'active' : ''}`}
+            onClick={(): void => {
+              if (onSwitchToFiles) onSwitchToFiles()
+              if (setViewMode) setViewMode('editor')
+              else if (viewMode === 'graph') onToggleViewMode()
+            }}
+            title="Document Editor & File View"
           >
-            <Blocks
+            <FileText
               size={13}
-              className={sidebarView === 'plugins' && !sidebarCollapsed ? 'text-zinc-200' : ''}
+              className={
+                viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed)
+                  ? 'text-zinc-200'
+                  : 'text-zinc-400'
+              }
             />
-            <span>Plugins</span>
-            {enabledPluginsCount !== undefined && enabledPluginsCount > 0 && (
-              <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono">
-                {enabledPluginsCount}
-              </span>
-            )}
+            <span>Files</span>
           </button>
-        )}
 
-        {/* 6. Floating Widgets Dropdown */}
-        <WidgetsMenu
-          widgetState={widgetState}
-          onToggleWidget={onToggleWidget}
-          activeUnsaved={activeUnsaved}
-          autoSaveEnabled={autoSaveEnabled}
-          onToggleAutoSave={onToggleAutoSave}
-        />
+          {/* 2. Knowledge Graph Tab */}
+          <button
+            className={`action-pill-btn ${viewMode === 'graph' ? 'active' : ''}`}
+            onClick={(): void => {
+              if (setViewMode) setViewMode('graph')
+              else if (viewMode === 'editor') onToggleViewMode()
+            }}
+            title="Knowledge Graph View"
+          >
+            <Network
+              size={13}
+              className={viewMode === 'graph' ? 'text-zinc-200' : 'text-zinc-400'}
+            />
+            <span>Graph</span>
+          </button>
+
+          {/* Divider between Graph and the rest of tabs */}
+          <div className="header-pipe-separator opacity-40" />
+
+          {/* 3. Document View Options Dropdown */}
+          <ViewModeMenu
+            showTabs={showTabs}
+            onToggleTabs={onToggleTabs}
+            showRightSidebar={showRightSidebar}
+            onToggleRightSidebar={onToggleRightSidebar}
+            showCover={showCover}
+            showIcon={showIcon}
+            showFileName={showFileName}
+            isOnlyThisFile={isOnlyThisFile}
+            activeFilePath={activeFilePath}
+            onToggleCover={onToggleCover}
+            onToggleIcon={onToggleIcon}
+            onToggleFileName={onToggleFileName}
+            onToggleOnlyThisFile={onToggleOnlyThisFile}
+          />
+
+          {/* 4. Plugins Button */}
+          {onTogglePluginsView && (
+            <button
+              className={`action-pill-btn ${sidebarView === 'plugins' && !sidebarCollapsed ? 'active' : ''}`}
+              onClick={onTogglePluginsView}
+              title="Toggle Plugins & Extensions (replaces File View)"
+            >
+              <Blocks
+                size={13}
+                className={sidebarView === 'plugins' && !sidebarCollapsed ? 'text-zinc-200' : ''}
+              />
+              <span>Plugins</span>
+              {enabledPluginsCount !== undefined && enabledPluginsCount > 0 && (
+                <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono">
+                  {enabledPluginsCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* 6. Floating Widgets Dropdown */}
+          <WidgetsMenu
+            widgetState={widgetState}
+            onToggleWidget={onToggleWidget}
+            activeUnsaved={activeUnsaved}
+            autoSaveEnabled={autoSaveEnabled}
+            onToggleAutoSave={onToggleAutoSave}
+          />
+        </div>
       </div>
 
       {/* Right Header Action Icons & Window Controls */}
       <div className="top-header-right flex items-center gap-2">
-        {/* Notifications Icon Button */}
-        <button
-          type="button"
-          className="header-action-btn relative"
-          onClick={(): void => alert('Notifications: All workspace systems operational.')}
-          title="Notifications"
-        >
-          <Bell size={13} />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-zinc-400" />
-        </button>
-
-        {/* Settings Icon Button */}
-        <button
-          type="button"
-          className="header-action-btn"
-          onClick={(): void => (onOpenSettings ? onOpenSettings() : alert('Settings Menu'))}
-          title="Settings"
-        >
-          <Settings size={13} />
-        </button>
-
-        {/* User Profile Avatar with Account & Settings Dropdown */}
-        <div className="relative" ref={accountMenuRef}>
+        {/* Squircle Tool Buttons Group */}
+        <div className="header-tool-cluster">
+          {/* Notifications Icon Button */}
           <button
             type="button"
-            className={`header-user-avatar ${showAccountMenu ? 'active' : ''}`}
-            onClick={(): void => setShowAccountMenu((prev) => !prev)}
-            title="Account & Settings (Oink User)"
+            className="header-action-btn relative"
+            onClick={(): void => alert('Notifications: All workspace systems operational.')}
+            title="Notifications"
           >
-            <span>DN</span>
+            <Bell size={13} />
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-zinc-400" />
           </button>
 
-          {showAccountMenu && (
-            <div className="notion-dropdown-popover header-account-popover">
-              <div className="notion-popover-header">
-                <img src={oinkLogo} alt="Avatar" className="notion-popover-avatar" />
-                <div className="notion-popover-user-info">
-                  <span className="notion-popover-name">Oink User</span>
-                  <span className="notion-popover-sub">dwaipayan.codes@gmail.com</span>
+          {/* Settings Icon Button */}
+          <button
+            type="button"
+            className="header-action-btn"
+            onClick={(): void => (onOpenSettings ? onOpenSettings() : alert('Settings Menu'))}
+            title="Settings"
+          >
+            <Settings size={13} />
+          </button>
+
+          {/* User Profile Avatar with Account & Settings Dropdown */}
+          <div className="relative" ref={accountMenuRef}>
+            <button
+              type="button"
+              className={`header-user-avatar ${showAccountMenu ? 'active' : ''}`}
+              onClick={(): void => setShowAccountMenu((prev) => !prev)}
+              title="Account & Settings (Oink User)"
+            >
+              <span>DN</span>
+            </button>
+
+            {showAccountMenu && (
+              <div className="notion-dropdown-popover header-account-popover">
+                <div className="notion-popover-header">
+                  <img src={oinkLogo} alt="Avatar" className="notion-popover-avatar" />
+                  <div className="notion-popover-user-info">
+                    <span className="notion-popover-name">Oink User</span>
+                    <span className="notion-popover-sub">dwaipayan.codes@gmail.com</span>
+                  </div>
+                </div>
+
+                <div className="notion-menu-divider" />
+
+                <div className="notion-popover-section">
+                  <button
+                    type="button"
+                    className="notion-menu-item"
+                    onClick={(): void => {
+                      setShowAccountMenu(false)
+                      onOpenSettings?.()
+                    }}
+                  >
+                    <Settings size={14} className="text-zinc-300 shrink-0" />
+                    <span>Settings & Preferences</span>
+                  </button>
+                </div>
+
+                <div className="notion-menu-divider" />
+
+                <div className="notion-popover-footer">
+                  <button
+                    type="button"
+                    className="notion-logout-btn"
+                    onClick={(): void => {
+                      setShowAccountMenu(false)
+                      alert('Signed out of Oink workspace account.')
+                    }}
+                  >
+                    Log out
+                  </button>
                 </div>
               </div>
-
-              <div className="notion-menu-divider" />
-
-              <div className="notion-popover-section">
-                <button
-                  type="button"
-                  className="notion-menu-item"
-                  onClick={(): void => {
-                    setShowAccountMenu(false)
-                    onOpenSettings?.()
-                  }}
-                >
-                  <Settings size={14} className="text-zinc-300 shrink-0" />
-                  <span>Settings & Preferences</span>
-                </button>
-              </div>
-
-              <div className="notion-menu-divider" />
-
-              <div className="notion-popover-footer">
-                <button
-                  type="button"
-                  className="notion-logout-btn"
-                  onClick={(): void => {
-                    setShowAccountMenu(false)
-                    alert('Signed out of Oink workspace account.')
-                  }}
-                >
-                  Log out
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Vertical Divider */}

@@ -30,6 +30,8 @@ interface SidebarProps {
   onTogglePlugin?: (pluginId: string) => void
   onOpenSettings?: () => void
   onSwitchView?: (view: SidebarViewMode) => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 function Sidebar({
@@ -56,7 +58,9 @@ function Sidebar({
   enabledPlugins = {},
   onTogglePlugin,
   onOpenSettings,
-  onSwitchView
+  onSwitchView,
+  onMouseEnter,
+  onMouseLeave
 }: SidebarProps): React.JSX.Element {
   return (
     <aside
@@ -65,6 +69,8 @@ function Sidebar({
         width: sidebarCollapsed ? 0 : `${sidebarWidth}px`
       }}
       aria-hidden={sidebarCollapsed}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div
         className="sidebar-content flex flex-col h-full min-w-0 relative"

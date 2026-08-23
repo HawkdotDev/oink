@@ -11,7 +11,7 @@ import {
 import { join, basename, dirname } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import iconIco from '../../resources/oink.ico?asset'
-import iconPng from '../../resources/oink.png?asset'
+import iconPng from '../../resources/logo.png?asset'
 import * as fs from 'fs/promises'
 import { watch, type FSWatcher, readFileSync, readdirSync, statSync } from 'fs'
 

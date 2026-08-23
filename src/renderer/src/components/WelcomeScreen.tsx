@@ -1,5 +1,5 @@
 import React from 'react'
-import oinkLogo from '../assets/oink.png'
+import oinkLogo from '../assets/logo.png'
 
 interface WelcomeScreenProps {
   workspacePath: string | null

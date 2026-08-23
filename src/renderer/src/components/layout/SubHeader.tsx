@@ -1,16 +1,25 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 import ShareMenu from './subheader/ShareMenu'
 import PageActionsMenu from './subheader/PageActionsMenu'
-import { StatusStatsConfig } from '../../types'
+import { StatusStatsConfig, OpenFileInfo } from '../../types'
+import { ProfessionalFileIcon } from '../../utils/fileIconUtils'
+import { getPathKey, normalizePath } from '../../utils/pathUtils'
 
 interface SubHeaderProps {
   sidebarCollapsed?: boolean
   onToggleSidebar?: () => void
+  onSidebarHoverEnter?: () => void
+  onSidebarHoverLeave?: () => void
   workspacePath: string | null
   workspaceName: string
   activeFilePath: string | null
   fileContent?: string
+  openFiles?: OpenFileInfo[]
+  unsavedFiles?: Record<string, boolean>
+  fileIcons?: Record<string, string>
+  onTabSelect?: (filePath: string) => void
+  onTabClose?: (filePath: string) => void
   onOpenWorkspace?: () => void
   autoSaveEnabled: boolean
   onToggleAutoSave: () => void
@@ -72,10 +81,17 @@ function formatRelativeEditedTime(timestamp?: number | null): string {
 function SubHeader({
   sidebarCollapsed = false,
   onToggleSidebar,
+  onSidebarHoverEnter,
+  onSidebarHoverLeave,
   workspacePath,
   workspaceName,
   activeFilePath,
   fileContent,
+  openFiles = [],
+  unsavedFiles,
+  fileIcons,
+  onTabSelect,
+  onTabClose,
   onOpenWorkspace,
   autoSaveEnabled,
   onToggleAutoSave,
@@ -144,9 +160,11 @@ function SubHeader({
     return formatRelativeEditedTime(lastEditedTime)
   }, [lastEditedTime, tick])
 
+  const [activeSubTab, setActiveSubTab] = useState<'breadcrumbs' | 'tabs'>('breadcrumbs')
+
   return (
     <div className="app-actions-bar select-none">
-      {/* Left Application Brand Logo & Navigation Breadcrumbs */}
+      {/* Left Application Brand Logo & Navigation Breadcrumbs / File Tabs */}
       <div className="actions-bar-left flex items-center gap-2 overflow-hidden">
         {/* Open / Close Sidebar Button in Breadcrumbs bar */}
         {onToggleSidebar && (
@@ -154,6 +172,8 @@ function SubHeader({
             type="button"
             className="sidebar-toggle-bar-btn"
             onClick={onToggleSidebar}
+            onMouseEnter={onSidebarHoverEnter}
+            onMouseLeave={onSidebarHoverLeave}
             title={sidebarCollapsed ? 'Open sidebar (Ctrl+B)' : 'Close sidebar (Ctrl+B)'}
           >
             {sidebarCollapsed ? (
@@ -164,33 +184,114 @@ function SubHeader({
           </button>
         )}
 
-        {/* Styled Minimal Breadcrumb Path Navigation */}
-        {(activeFilePath || workspacePath) && (
-          <div className="nav-breadcrumbs">
-            {/* First Folder in Breadcrumbs (Workspace Root) */}
-            <div
-              className="breadcrumb-item workspace-root"
-              title={`Workspace: ${currentDisplayName}`}
-              onClick={onOpenWorkspace}
-            >
-              <span className="max-w-35 truncate">{currentDisplayName}</span>
-            </div>
+        {/* 2 Segmented Tabs determining display after divider */}
+        <div className="subheader-tab-cluster">
+          <button
+            type="button"
+            className={`subheader-tab-btn ${activeSubTab === 'breadcrumbs' ? 'active' : ''}`}
+            onClick={(): void => setActiveSubTab('breadcrumbs')}
+            title="Display Breadcrumbs Path"
+          >
+            <span>Breadcrumbs</span>
+          </button>
+          <button
+            type="button"
+            className={`subheader-tab-btn ${activeSubTab === 'tabs' ? 'active' : ''}`}
+            onClick={(): void => setActiveSubTab('tabs')}
+            title="Display Open File Tabs"
+          >
+            <span>Tabs</span>
+            {openFiles.length > 0 && (
+              <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono ml-0.5">
+                {openFiles.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-            {relativeParts.map((part, idx) => {
-              const isLast = idx === relativeParts.length - 1
-              return (
-                <React.Fragment key={idx}>
-                  <span className="breadcrumb-separator">/</span>
+        {/* Vertical Divider */}
+        <div className="header-pipe-separator" />
+
+        {/* Dynamic Display: Either Breadcrumbs Path or Open Document Tabs */}
+        {activeSubTab === 'tabs' ? (
+          openFiles.length > 0 ? (
+            <div className="subheader-file-tabs flex items-center overflow-x-auto flex-1 min-w-0">
+              {openFiles.map((file) => {
+                const isActive = activeFilePath === file.path
+                const isUnsaved = unsavedFiles
+                  ? !!unsavedFiles[file.path] ||
+                    !!unsavedFiles[getPathKey(file.path)] ||
+                    !!unsavedFiles[normalizePath(file.path)]
+                  : false
+                const rel = file.path
+                  .toLowerCase()
+                  .replace((workspacePath || '').toLowerCase(), '')
+                  .replace(/^[\\/]/, '')
+                const customIcon = fileIcons ? fileIcons[rel] : undefined
+
+                return (
                   <div
-                    className={`breadcrumb-item ${isLast ? 'active-file' : 'directory'}`}
-                    title={part}
+                    key={file.path}
+                    className={`subheader-tab-item ${isActive ? 'active' : ''} ${isUnsaved ? 'unsaved' : ''}`}
+                    onClick={(): void => onTabSelect?.(file.path)}
+                    title={file.path}
                   >
-                    <span className="truncate max-w-44">{part}</span>
+                    <span className="subheader-tab-item-icon">
+                      {customIcon ? (
+                        <span className="text-[12px]">{customIcon}</span>
+                      ) : (
+                        <ProfessionalFileIcon fileName={file.name} className="scale-[0.85]" />
+                      )}
+                    </span>
+                    <span className="subheader-tab-item-name">{file.name}</span>
+                    {onTabClose && (
+                      <button
+                        type="button"
+                        className="subheader-tab-item-close"
+                        onClick={(e): void => {
+                          e.stopPropagation()
+                          onTabClose(file.path)
+                        }}
+                        title="Close Tab"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
                   </div>
-                </React.Fragment>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-[11px] text-zinc-500 italic px-1">No open tabs</div>
+          )
+        ) : (
+          (activeFilePath || workspacePath) && (
+            <div className="nav-breadcrumbs">
+              {/* First Folder in Breadcrumbs (Workspace Root) */}
+              <div
+                className="breadcrumb-item workspace-root"
+                title={`Workspace: ${currentDisplayName}`}
+                onClick={onOpenWorkspace}
+              >
+                <span className="max-w-35 truncate">{currentDisplayName}</span>
+              </div>
+
+              {relativeParts.map((part, idx) => {
+                const isLast = idx === relativeParts.length - 1
+                return (
+                  <React.Fragment key={idx}>
+                    <span className="breadcrumb-separator">/</span>
+                    <div
+                      className={`breadcrumb-item ${isLast ? 'active-file' : 'directory'}`}
+                      title={part}
+                    >
+                      <span className="truncate max-w-44">{part}</span>
+                    </div>
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          )
         )}
       </div>
 
