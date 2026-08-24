@@ -30,6 +30,7 @@ interface UserSettings {
   tabSize: number
   wordWrap: boolean
   spellcheck: boolean
+  maxUndoHistory: number
 
   // Appearance
   editorWidth: 'compact' | 'standard' | 'wide' | 'full'
@@ -62,6 +63,7 @@ const DEFAULT_USER_SETTINGS: UserSettings = {
   tabSize: 2,
   wordWrap: true,
   spellcheck: true,
+  maxUndoHistory: 50,
 
   editorWidth: 'standard',
   coverBannerHeight: 200,
@@ -136,6 +138,12 @@ interface ShortcutItem {
 
 const SHORTCUT_LIST: ShortcutItem[] = [
   { keyCombo: 'Ctrl + S', description: 'Save current document', category: 'General' },
+  { keyCombo: 'Ctrl + Z', description: 'Undo last edit / block modification', category: 'Editor' },
+  {
+    keyCombo: 'Ctrl + Y / Ctrl + Shift + Z',
+    description: 'Redo previously undone edit',
+    category: 'Editor'
+  },
   { keyCombo: 'Ctrl + P', description: 'Quick search files / explorer', category: 'Navigation' },
   { keyCombo: 'Ctrl + B', description: 'Toggle explorer sidebar', category: 'Layout' },
   { keyCombo: 'Ctrl + ,', description: 'Open Settings & Preferences', category: 'General' },
@@ -149,6 +157,23 @@ const SHORTCUT_LIST: ShortcutItem[] = [
   { keyCombo: 'Esc', description: 'Close popovers / modals / search', category: 'General' }
 ]
 
+interface SettingsModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSettingsChange?: (settings: UserSettings) => void
+  currentAutoSave?: boolean
+  onToggleAutoSave?: () => void
+  editorFontFamily?: string
+  editorFontSize?: number
+  onFontFamilyChange?: (font: string) => void
+  onFontSizeChange?: (size: number) => void
+  maxUndoHistory?: number
+  onMaxUndoHistoryChange?: (val: number) => void
+  initialTab?: SettingsTab
+  enabledPlugins?: Record<string, boolean>
+  onTogglePlugin?: (pluginId: string) => void
+}
+
 export default function SettingsModal({
   isOpen,
   onClose,
@@ -159,6 +184,8 @@ export default function SettingsModal({
   editorFontSize = 15,
   onFontFamilyChange,
   onFontSizeChange,
+  maxUndoHistory = 50,
+  onMaxUndoHistoryChange,
   initialTab,
   enabledPlugins = {},
   onTogglePlugin
@@ -643,6 +670,39 @@ export default function SettingsModal({
                       />
                       <span className="settings-toggle-slider" />
                     </label>
+                  </div>
+
+                  {/* Undo / Redo History Limit (Ctrl + Z) */}
+                  <div className="settings-row border-t border-zinc-800/60 pt-3">
+                    <div className="settings-row-text">
+                      <label className="settings-row-label">Undo History Depth (Ctrl + Z)</label>
+                      <span className="settings-row-desc">
+                        Maximum number of undo/redo snapshots preserved per document (Default: 50)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={10}
+                        max={200}
+                        step={5}
+                        className="settings-range"
+                        value={settings.maxUndoHistory ?? maxUndoHistory ?? 50}
+                        onChange={(e): void => {
+                          const val = Number(e.target.value)
+                          updateSetting('maxUndoHistory', val)
+                          onMaxUndoHistoryChange?.(val)
+                          try {
+                            localStorage.setItem('oink_max_undo_count', String(val))
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                      />
+                      <span className="text-xs font-mono text-zinc-300 w-16 text-right">
+                        {settings.maxUndoHistory ?? maxUndoHistory ?? 50} steps
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

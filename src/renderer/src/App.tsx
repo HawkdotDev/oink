@@ -97,6 +97,18 @@ export default function App(): React.JSX.Element {
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false)
   const [isPageLocked, setIsPageLocked] = useState<boolean>(false)
   const [showBannerPicker, setShowBannerPicker] = useState<boolean>(false)
+  const [maxUndoHistory, setMaxUndoHistory] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('oink_max_undo_count')
+      return saved ? parseInt(saved, 10) : 50
+    } catch {
+      return 50
+    }
+  })
+
+  const handleTriggerUndo = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('oink:undo'))
+  }, [])
 
   // 3. Typography Domain Management
   const {
@@ -876,6 +888,7 @@ export default function App(): React.JSX.Element {
         onDeleteFile={(): void => {
           void handleDeleteFile()
         }}
+        onUndo={handleTriggerUndo}
         onImport={(): void => {
           void handleImportFile()
         }}
@@ -1032,6 +1045,7 @@ export default function App(): React.JSX.Element {
                       value={fileContents[activeFilePath] || ''}
                       readOnly={isPageLocked}
                       workspacePath={workspacePath}
+                      maxUndoHistory={maxUndoHistory}
                       onChange={(value): void => {
                         if (activeFilePath) {
                           const norm = normalizePath(activeFilePath)
@@ -1167,6 +1181,8 @@ export default function App(): React.JSX.Element {
         editorFontSize={editorFontSize}
         onFontFamilyChange={handleFontFamilyChange}
         onFontSizeChange={handleFontSizeChange}
+        maxUndoHistory={maxUndoHistory}
+        onMaxUndoHistoryChange={setMaxUndoHistory}
         enabledPlugins={enabledPlugins}
         onTogglePlugin={handleTogglePlugin}
       />

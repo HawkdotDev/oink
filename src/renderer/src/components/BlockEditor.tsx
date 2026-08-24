@@ -28,34 +28,7 @@ import {
   EmbedTool,
   ChecklistTool
 } from './editor/tools'
-
-interface EditorJSBlock {
-  type: string
-  data: {
-    text?: string
-    code?: string
-    language?: string
-    level?: number
-    style?: string
-    items?: (string | { text?: string; checked?: boolean })[]
-    alignment?: string
-    file?: {
-      url?: string
-    }
-    url?: string
-    source?: string
-    embed?: string
-    service?: string
-    caption?: string
-    withBorder?: boolean
-    withBackground?: boolean
-    stretched?: boolean
-  }
-}
-
-interface EditorJSData {
-  blocks: EditorJSBlock[]
-}
+import { EditorHistoryManager, EditorJSData, EditorJSBlock } from './editor/EditorHistoryManager'
 
 // Simple Markdown parser to Editor.js JSON data
 function parseMarkdownToEditorJS(text: string): EditorJSData {
@@ -149,14 +122,15 @@ function allowWikilinksInSanitizer(toolClass: any): void {
   const originalSanitize = toolClass.sanitize
   Object.defineProperty(toolClass, 'sanitize', {
     get() {
-      const rules =
+      const base =
         typeof originalSanitize === 'function' ? originalSanitize() : originalSanitize || {}
       return {
-        ...rules,
+        ...base,
         a: {
-          ...(rules.a === true ? { href: true } : rules.a || {}),
-          class: 'wikilink',
-          'data-path': true
+          ...(base.a || {}),
+          class: true,
+          'data-path': true,
+          href: true
         }
       }
     },
@@ -164,18 +138,21 @@ function allowWikilinksInSanitizer(toolClass: any): void {
   })
 }
 
-// Apply to all text tools
 allowWikilinksInSanitizer(Header)
 allowWikilinksInSanitizer(List)
 allowWikilinksInSanitizer(Quote)
+allowWikilinksInSanitizer(Underline)
+allowWikilinksInSanitizer(StrikethroughInlineTool)
+allowWikilinksInSanitizer(Marker)
 
 interface BlockEditorProps {
   value: string
   onChange: (value: string) => void
-  activeFilePath: string
+  activeFilePath?: string | null
   workspacePath?: string | null
-  onWikilinkClick?: (path: string) => void
+  onWikilinkClick?: (targetName: string) => void
   readOnly?: boolean
+  maxUndoHistory?: number
 }
 
 function BlockEditorComponent({
@@ -184,7 +161,8 @@ function BlockEditorComponent({
   activeFilePath,
   workspacePath,
   onWikilinkClick,
-  readOnly = false
+  readOnly = false,
+  maxUndoHistory = 50
 }: BlockEditorProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorInstanceRef = useRef<EditorJS | null>(null)
@@ -192,24 +170,27 @@ function BlockEditorComponent({
   const isLocalChangeRef = useRef<boolean>(false)
   const destroyingPromiseRef = useRef<Promise<void> | null>(null)
 
+  const historyManagerRef = useRef<EditorHistoryManager>(new EditorHistoryManager(maxUndoHistory))
+
+  useEffect(() => {
+    historyManagerRef.current.setMaxHistoryLength(maxUndoHistory)
+  }, [maxUndoHistory])
+
   const workspacePathRef = useRef(workspacePath)
   useEffect(() => {
     workspacePathRef.current = workspacePath
   }, [workspacePath])
 
-  // Track the value in a ref to satisfy React hook dependencies rules
   const valueRef = useRef(value)
   useEffect(() => {
     valueRef.current = value
   }, [value])
 
-  // Track the change wrapper so that we always use the latest onChange callback
   const onChangeRef = useRef(onChange)
   useEffect(() => {
     onChangeRef.current = onChange
   }, [onChange])
 
-  // Track onWikilinkClick callback in a ref to satisfy React hook rules
   const onWikilinkClickRef = useRef(onWikilinkClick)
   useEffect(() => {
     onWikilinkClickRef.current = onWikilinkClick
@@ -227,7 +208,6 @@ function BlockEditorComponent({
     }
   }
 
-  // Ref to hold any pending debounced change timer
   const changeDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pendingApiRef = useRef<any>(null)
@@ -240,8 +220,14 @@ function BlockEditorComponent({
     const api = pendingApiRef.current || editorInstanceRef.current
     if (!api) return
     try {
-      const savedData = await api.saver.save()
-      const markdown = serializeEditorJSToMarkdown(savedData as EditorJSData)
+      const savedData = (await api.saver.save()) as EditorJSData
+      const markdown = serializeEditorJSToMarkdown(savedData)
+
+      // Record snapshot to history stack if content changed and not in undo/redo execution
+      if (!historyManagerRef.current.isExecutingUndoRedo) {
+        historyManagerRef.current.record(savedData)
+      }
+
       if (markdown !== lastSerializedRef.current) {
         isLocalChangeRef.current = true
         lastSerializedRef.current = markdown
@@ -252,6 +238,59 @@ function BlockEditorComponent({
     }
   }, [])
 
+  const handleUndo = useCallback(async (): Promise<void> => {
+    const editor = editorInstanceRef.current
+    if (!editor) return
+
+    // Flush any typing change first so the current state is recorded
+    if (changeDebounceTimerRef.current) {
+      clearTimeout(changeDebounceTimerRef.current)
+      changeDebounceTimerRef.current = null
+      try {
+        const currentData = (await editor.saver.save()) as EditorJSData
+        historyManagerRef.current.record(currentData)
+      } catch {
+        // ignore
+      }
+    }
+
+    await historyManagerRef.current.undo(editor, (targetData) => {
+      const markdown = serializeEditorJSToMarkdown(targetData)
+      isLocalChangeRef.current = true
+      lastSerializedRef.current = markdown
+      onChangeRef.current(markdown)
+    })
+  }, [])
+
+  const handleRedo = useCallback(async (): Promise<void> => {
+    const editor = editorInstanceRef.current
+    if (!editor) return
+
+    await historyManagerRef.current.redo(editor, (targetData) => {
+      const markdown = serializeEditorJSToMarkdown(targetData)
+      isLocalChangeRef.current = true
+      lastSerializedRef.current = markdown
+      onChangeRef.current(markdown)
+    })
+  }, [])
+
+  // Listen for external undo/redo dispatch events
+  useEffect(() => {
+    const handleOinkUndo = (): void => {
+      void handleUndo()
+    }
+    const handleOinkRedo = (): void => {
+      void handleRedo()
+    }
+
+    window.addEventListener('oink:undo', handleOinkUndo)
+    window.addEventListener('oink:redo', handleOinkRedo)
+    return (): void => {
+      window.removeEventListener('oink:undo', handleOinkUndo)
+      window.removeEventListener('oink:redo', handleOinkRedo)
+    }
+  }, [handleUndo, handleRedo])
+
   // Initialize/reinitialize editor when file changes
   useEffect(() => {
     if (!containerRef.current) return
@@ -260,7 +299,6 @@ function BlockEditorComponent({
     let editor: EditorJS | null = null
 
     const init = async (): Promise<void> => {
-      // 1. Wait for any active cleanup/destruction to finish first
       if (destroyingPromiseRef.current) {
         try {
           await destroyingPromiseRef.current
@@ -270,7 +308,6 @@ function BlockEditorComponent({
         destroyingPromiseRef.current = null
       }
 
-      // 2. If there's still a previous instance in the ref, destroy it and wait
       if (editorInstanceRef.current) {
         const previousInstance = editorInstanceRef.current
         editorInstanceRef.current = null
@@ -286,6 +323,7 @@ function BlockEditorComponent({
       if (isDestroyed) return
 
       const parsedData = parseMarkdownToEditorJS(valueRef.current)
+      historyManagerRef.current.initialize(parsedData)
 
       editor = new EditorJS({
         holder: containerRef.current || 'editorjs-container',
@@ -436,6 +474,7 @@ function BlockEditorComponent({
           }
         },
         onChange: (api) => {
+          if (historyManagerRef.current.isExecutingUndoRedo) return
           pendingApiRef.current = api
           if (changeDebounceTimerRef.current) {
             clearTimeout(changeDebounceTimerRef.current)
@@ -476,6 +515,7 @@ function BlockEditorComponent({
         .then(() => {
           editorInstanceRef.current?.blocks.render(parsedData)
           lastSerializedRef.current = value
+          historyManagerRef.current.initialize(parsedData)
         })
         .catch(() => {
           // Ignore if editor instance was unmounted
@@ -483,15 +523,36 @@ function BlockEditorComponent({
     }
   }, [value])
 
-  // Key Event Remap Listener (Enter -> Line Break, Ctrl+Enter -> New paragraph block)
+  // Key Event Remap Listener:
+  // - Ctrl + Z -> Undo
+  // - Ctrl + Y / Ctrl + Shift + Z -> Redo
+  // - Enter -> Line Break inside block
+  // - Ctrl + Enter -> New paragraph block below
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     const handleKeyDown = (e: KeyboardEvent): void => {
+      // 1. Ctrl / Cmd + Z (Undo) and Ctrl + Y / Ctrl + Shift + Z (Redo)
+      if (e.ctrlKey || e.metaKey) {
+        const key = e.key.toLowerCase()
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault()
+          e.stopPropagation()
+          void handleUndo()
+          return
+        } else if (key === 'y' || (e.shiftKey && key === 'z')) {
+          e.preventDefault()
+          e.stopPropagation()
+          void handleRedo()
+          return
+        }
+      }
+
+      // 2. Enter behavior
       if (e.key === 'Enter') {
         if (!e.ctrlKey && !e.shiftKey) {
-          // Normal Enter -> insert line break inside the current block using modern Selection/Range DOM APIs
+          // Normal Enter -> insert line break inside current block using Selection/Range
           e.preventDefault()
           e.stopPropagation()
           const sel = window.getSelection()
@@ -504,6 +565,14 @@ function BlockEditorComponent({
             range.setEndAfter(br)
             sel.removeAllRanges()
             sel.addRange(range)
+
+            // Trigger change notification on line break
+            if (changeDebounceTimerRef.current) {
+              clearTimeout(changeDebounceTimerRef.current)
+            }
+            changeDebounceTimerRef.current = setTimeout(() => {
+              void flushPendingChanges()
+            }, 150)
           }
         } else if (e.ctrlKey) {
           // Ctrl + Enter -> create and focus a new paragraph block below
@@ -515,7 +584,6 @@ function BlockEditorComponent({
             try {
               const index = editorInstance.blocks.getCurrentBlockIndex()
               editorInstance.blocks.insert('paragraph', { text: '' }, {}, index + 1, true)
-              // Transfer focus asynchronously
               setTimeout(() => {
                 try {
                   editorInstance.caret.setToBlock(index + 1, 'start')
@@ -535,7 +603,7 @@ function BlockEditorComponent({
     return () => {
       container.removeEventListener('keydown', handleKeyDown, true)
     }
-  }, [activeFilePath])
+  }, [activeFilePath, handleUndo, handleRedo, flushPendingChanges])
 
   // Delegated click listener to catch wikilink clicks (both HTML anchors and raw [[Link]] text)
   useEffect(() => {
@@ -599,31 +667,25 @@ function BlockEditorComponent({
             if (text[i] === '\n' || text[i] === '\r') break
           }
 
-          if (endIdx !== -1) {
-            const wikilinkContent = text.substring(startIdx + 2, endIdx - 1)
-            const parts = wikilinkContent.split('|')
-            const path = parts[0].trim()
-            if (path && onWikilinkClickRef.current) {
+          if (endIdx !== -1 && endIdx > startIdx + 3) {
+            const rawTarget = text.substring(startIdx + 2, endIdx - 1).trim()
+            if (rawTarget && onWikilinkClickRef.current) {
               e.preventDefault()
               e.stopPropagation()
-              onWikilinkClickRef.current(path)
+              onWikilinkClickRef.current(rawTarget)
             }
           }
         }
       }
     }
 
-    container.addEventListener('click', handleMouseClick, true)
+    container.addEventListener('click', handleMouseClick)
     return () => {
-      container.removeEventListener('click', handleMouseClick, true)
+      container.removeEventListener('click', handleMouseClick)
     }
   }, [])
 
-  return (
-    <div className="block-editor-container">
-      <div id="editorjs-container" ref={containerRef} />
-    </div>
-  )
+  return <div ref={containerRef} className="block-editor-wrapper" id="editorjs-container" />
 }
 
 export default React.memo(BlockEditorComponent)
