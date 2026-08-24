@@ -17,6 +17,7 @@ interface FileSystemAPI {
   renamePath(oldPath: string, newPath: string): Promise<void>
   showItemInFolder(fullPath: string): Promise<boolean>
   showSaveDialog(defaultName: string): Promise<string | null>
+  saveAttachment(workspacePath: string, fileName: string, dataUrl: string): Promise<string>
   watchDirectory(dirPath: string): Promise<void>
   closeWatcher(): Promise<void>
   getGraphData(dirPath: string): Promise<{

@@ -113,25 +113,36 @@ export default function SidebarSearchView({
         return
       }
 
+      // Pre-load any uncached markdown files in parallel
+      if (searchContent) {
+        const uncachedItems = items.filter(
+          (item) => item.name.endsWith('.md') && !contentCache.current.has(item.path)
+        )
+        if (uncachedItems.length > 0) {
+          await Promise.all(
+            uncachedItems.map(async (item) => {
+              try {
+                const content = await window.api.fs.readFile(item.path)
+                contentCache.current.set(item.path, content)
+              } catch {
+                contentCache.current.set(item.path, '')
+              }
+            })
+          )
+        }
+      }
+
+      if (isCancelled) return
+
       const results: SearchMatch[] = []
 
       for (const item of items) {
-        if (isCancelled) return
         const nameMatches = item.name.toLowerCase().includes(q)
         const pathMatches = item.relPath.toLowerCase().includes(q)
         const contentMatches: Array<{ line: number; text: string }> = []
 
         if (searchContent && item.name.endsWith('.md')) {
-          let content = contentCache.current.get(item.path)
-          if (content === undefined) {
-            try {
-              content = await window.api.fs.readFile(item.path)
-              contentCache.current.set(item.path, content)
-            } catch {
-              content = ''
-            }
-          }
-
+          const content = contentCache.current.get(item.path) || ''
           if (content) {
             const lines = content.split('\n')
             for (let i = 0; i < lines.length; i++) {

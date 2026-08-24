@@ -42,6 +42,10 @@ export default function App(): React.JSX.Element {
 
   const [openFiles, setOpenFiles] = useState<OpenFileInfo[]>(() => savedState.openFiles ?? [])
   const [fileContents, setFileContents] = useState<Record<string, string>>({})
+  const fileContentsRef = useRef(fileContents)
+  useEffect(() => {
+    fileContentsRef.current = fileContents
+  }, [fileContents])
   const [originalFileContents, setOriginalFileContents] = useState<Record<string, string>>({})
 
   const [fileIcons, setFileIcons] = useState<Record<string, string>>({})
@@ -295,7 +299,7 @@ export default function App(): React.JSX.Element {
   )
 
   // Multithreaded background Web Worker for document processing
-  const { stats: workerStats } = useIndexerWorker(
+  const { stats: workerStats, headings: workerHeadings } = useIndexerWorker(
     activeFilePath ? fileContents[activeFilePath] : ''
   )
 
@@ -503,9 +507,10 @@ export default function App(): React.JSX.Element {
       const normPath = normalizePath(filePath)
       if (!normPath) return ''
 
-      if (fileContents[normPath] !== undefined) {
-        const clean = stripFrontmatter(fileContents[normPath])
-        if (clean !== fileContents[normPath]) {
+      const cached = fileContentsRef.current[normPath]
+      if (cached !== undefined) {
+        const clean = stripFrontmatter(cached)
+        if (clean !== cached) {
           setFileContents((prev) => ({ ...prev, [normPath]: clean }))
         }
         return clean
@@ -540,7 +545,7 @@ export default function App(): React.JSX.Element {
         return ''
       }
     },
-    [fileContents, workspacePath]
+    [workspacePath]
   )
 
   // Save application state to persistent localStorage on any UI state change
@@ -577,10 +582,13 @@ export default function App(): React.JSX.Element {
     saveState
   ])
 
-  // Re-hydrate contents for all restored open files on initial render
+  // Re-hydrate contents for open files that are not loaded yet
   useEffect(() => {
     openFiles.forEach((file) => {
-      void loadFileContent(file.path)
+      const norm = normalizePath(file.path)
+      if (fileContentsRef.current[norm] === undefined) {
+        void loadFileContent(file.path)
+      }
     })
   }, [openFiles, loadFileContent])
 
@@ -1578,6 +1586,7 @@ export default function App(): React.JSX.Element {
                     <BlockEditor
                       value={fileContents[activeFilePath] || ''}
                       readOnly={isPageLocked}
+                      workspacePath={workspacePath}
                       onChange={(value): void => {
                         if (activeFilePath) {
                           const norm = normalizePath(activeFilePath)
@@ -1616,7 +1625,9 @@ export default function App(): React.JSX.Element {
               widgetZIndexes={widgetZIndexes}
               widgetPositions={widgetPositions}
               activeFilePath={activeFilePath}
+              workspacePath={workspacePath}
               fileContents={fileContents}
+              headings={workerHeadings}
               onUpdateFileContent={(filePath, content): void => {
                 setFileContents((prev) => ({ ...prev, [filePath]: content }))
               }}
@@ -1679,7 +1690,10 @@ export default function App(): React.JSX.Element {
                 </div>
                 <div className="right-sidebar-content">
                   {activeFilePath ? (
-                    <OutlineWidget content={fileContents[activeFilePath] || ''} />
+                    <OutlineWidget
+                      content={fileContents[activeFilePath] || ''}
+                      headings={workerHeadings}
+                    />
                   ) : (
                     <div className="text-zinc-600 text-center py-8 text-[11px]">No file open</div>
                   )}

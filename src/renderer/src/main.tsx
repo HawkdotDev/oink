@@ -40,10 +40,19 @@ if (!window.api) {
       renamePath: () => Promise.resolve(),
       showItemInFolder: () => Promise.resolve(true),
       showSaveDialog: () => Promise.resolve('/workspace/untitled.md'),
+      saveAttachment: (_ws: string, name: string, dataUrl: string) =>
+        Promise.resolve(dataUrl || `assets/${name}`),
       watchDirectory: () => Promise.resolve(),
       closeWatcher: () => Promise.resolve(),
       getGraphData: () => Promise.resolve({ nodes: [], links: [] }),
       onWorkspaceChanged: () => () => {}
+    },
+    window: {
+      minimize: () => {},
+      maximize: () => {},
+      close: () => {},
+      toggleFullScreen: () => {},
+      isFullScreen: () => Promise.resolve(false)
     }
   }
 }

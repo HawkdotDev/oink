@@ -203,12 +203,18 @@ function FileTree({
         [key]: normalizedItems
       }))
 
-      // Load metadata for markdown files safely without trigger loops
-      for (const item of normalizedItems) {
-        if (!item.isDir && item.name.endsWith('.md')) {
-          const itemKey = getPathKey(item.path)
-          if (!loadedMetadataCache.current.has(itemKey)) {
-            loadedMetadataCache.current.add(itemKey)
+      // Load metadata for markdown files concurrently in parallel
+      const unreadItems = normalizedItems.filter(
+        (item) =>
+          !item.isDir &&
+          item.name.endsWith('.md') &&
+          !loadedMetadataCache.current.has(getPathKey(item.path))
+      )
+      unreadItems.forEach((item) => loadedMetadataCache.current.add(getPathKey(item.path)))
+
+      if (unreadItems.length > 0) {
+        void Promise.all(
+          unreadItems.map(async (item) => {
             try {
               const content = await window.api.fs.readFile(item.path)
               const meta = parseLocalMetadata(content)
@@ -218,8 +224,8 @@ function FileTree({
             } catch {
               // Ignore read errors
             }
-          }
-        }
+          })
+        )
       }
     } catch (err) {
       console.error(`Failed to load directory ${dirPath}:`, err)

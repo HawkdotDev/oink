@@ -571,6 +571,8 @@ interface EditorJSBlock {
   type: string
   data: {
     text?: string
+    code?: string
+    language?: string
     level?: number
     style?: string
     items?: (string | { text?: string; checked?: boolean })[]
@@ -619,6 +621,11 @@ function serializeEditorJSToMarkdown(data: EditorJSData): string {
           const level = b.data.level || 2
           const hashes = '#'.repeat(level)
           return `${hashes} ${htmlToMarkdown(b.data.text || '')}`
+        }
+        case 'code': {
+          const codeText = b.data.code || b.data.text || ''
+          const lang = b.data.language || ''
+          return `\`\`\`${lang}\n${codeText}\n\`\`\``
         }
         case 'list': {
           const items = (b.data.items || []) as string[]
@@ -703,6 +710,7 @@ interface BlockEditorProps {
   value: string
   onChange: (value: string) => void
   activeFilePath: string
+  workspacePath?: string | null
   onWikilinkClick?: (path: string) => void
   readOnly?: boolean
 }
@@ -711,6 +719,7 @@ export default function BlockEditor({
   value,
   onChange,
   activeFilePath,
+  workspacePath,
   onWikilinkClick,
   readOnly = false
 }: BlockEditorProps): React.JSX.Element {
@@ -719,6 +728,11 @@ export default function BlockEditor({
   const lastSerializedRef = useRef<string>('')
   const isLocalChangeRef = useRef<boolean>(false)
   const destroyingPromiseRef = useRef<Promise<void> | null>(null)
+
+  const workspacePathRef = useRef(workspacePath)
+  useEffect(() => {
+    workspacePathRef.current = workspacePath
+  }, [workspacePath])
 
   // Track the value in a ref to satisfy React hook dependencies rules
   const valueRef = useRef(value)
@@ -860,11 +874,33 @@ export default function BlockEditor({
                 uploadByFile(file: File) {
                   return new Promise((resolve, reject) => {
                     const reader = new FileReader()
-                    reader.onload = (e) => {
+                    reader.onload = async (e) => {
+                      const dataUrl = e.target?.result as string
+                      if (workspacePathRef.current && window.api?.fs?.saveAttachment) {
+                        try {
+                          const relPath = await window.api.fs.saveAttachment(
+                            workspacePathRef.current,
+                            file.name || 'attachment.png',
+                            dataUrl
+                          )
+                          resolve({
+                            success: 1,
+                            file: {
+                              url: relPath
+                            }
+                          })
+                          return
+                        } catch (err) {
+                          console.error(
+                            'Failed saving attachment locally, falling back to dataUrl:',
+                            err
+                          )
+                        }
+                      }
                       resolve({
                         success: 1,
                         file: {
-                          url: e.target?.result
+                          url: dataUrl
                         }
                       })
                     }
@@ -962,7 +998,7 @@ export default function BlockEditor({
     }
   }, [value])
 
-  // Key Event Remap Listener (Enter -> Shift+Enter, Ctrl+Enter -> Enter)
+  // Key Event Remap Listener (Enter -> Line Break, Ctrl+Enter -> New paragraph block)
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -970,10 +1006,20 @@ export default function BlockEditor({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Enter') {
         if (!e.ctrlKey && !e.shiftKey) {
-          // Normal Enter -> insert line break inside the current block
+          // Normal Enter -> insert line break inside the current block using modern Selection/Range DOM APIs
           e.preventDefault()
           e.stopPropagation()
-          document.execCommand('insertLineBreak')
+          const sel = window.getSelection()
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0)
+            range.deleteContents()
+            const br = document.createElement('br')
+            range.insertNode(br)
+            range.setStartAfter(br)
+            range.setEndAfter(br)
+            sel.removeAllRanges()
+            sel.addRange(range)
+          }
         } else if (e.ctrlKey) {
           // Ctrl + Enter -> create and focus a new paragraph block below
           e.preventDefault()
@@ -1025,7 +1071,16 @@ export default function BlockEditor({
       }
 
       let range: Range | null = null
-      if (document.caretRangeFromPoint) {
+      // @ts-ignore: document.caretPositionFromPoint is standard in modern browsers but may lack TS DOM types
+      if (typeof document.caretPositionFromPoint === 'function') {
+        // @ts-ignore: document.caretPositionFromPoint return object
+        const pos = document.caretPositionFromPoint(e.clientX, e.clientY)
+        if (pos && pos.offsetNode) {
+          range = document.createRange()
+          range.setStart(pos.offsetNode, pos.offset)
+          range.setEnd(pos.offsetNode, pos.offset)
+        }
+      } else if (typeof document.caretRangeFromPoint === 'function') {
         range = document.caretRangeFromPoint(e.clientX, e.clientY)
       } else {
         const firefoxEvent = e as MouseEvent & { rangeParent?: Node; rangeOffset?: number }

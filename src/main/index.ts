@@ -8,14 +8,25 @@ import {
   Menu,
   nativeImage
 } from 'electron'
-import { join, basename, dirname } from 'path'
+import { join, basename, dirname, extname, normalize } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import iconIco from '../../resources/logo.ico?asset'
 import iconPng from '../../resources/logo.png?asset'
 import * as fs from 'fs/promises'
-import { watch, type FSWatcher, readFileSync, readdirSync, statSync } from 'fs'
+import { watch, type FSWatcher } from 'fs'
 
 let workspaceWatcher: FSWatcher | null = null
+
+function validatePath(p: unknown): string {
+  if (typeof p !== 'string' || !p.trim()) {
+    throw new Error('Invalid path parameter')
+  }
+  const normalized = normalize(p.trim())
+  if (normalized.includes('\0')) {
+    throw new Error('Invalid null byte in path')
+  }
+  return normalized
+}
 
 function createWindow(): void {
   const iconPath = process.platform === 'win32' ? iconIco : iconPng
@@ -48,7 +59,62 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // Window control IPC handlers
+  // HMR for renderer base on electron-vite cli.
+  // Load the remote URL for development or the local html file for production.
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+}
+
+// Asynchronously collect all markdown files in the workspace directory tree
+async function getMarkdownFilesAsync(dir: string, fileList: string[] = []): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    const subDirPromises: Promise<string[]>[] = []
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (
+          !entry.name.startsWith('.') &&
+          entry.name !== 'node_modules' &&
+          entry.name !== 'out' &&
+          entry.name !== 'build' &&
+          entry.name !== 'dist'
+        ) {
+          subDirPromises.push(getMarkdownFilesAsync(fullPath, fileList))
+        }
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        fileList.push(fullPath)
+      }
+    }
+
+    if (subDirPromises.length > 0) {
+      await Promise.all(subDirPromises)
+    }
+  } catch (err) {
+    console.error(`Failed reading directory for markdown files: ${dir}`, err)
+  }
+  return fileList
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+app.whenReady().then(() => {
+  // Force dark mode for native titlebar, menus, and system dialogs to blend the separator line
+  nativeTheme.themeSource = 'dark'
+  // Set app user model id for windows
+  electronApp.setAppUserModelId('com.oink.app')
+
+  // Default open or close DevTools by F12 in development
+  // and ignore CommandOrControl + R in production.
+  app.on('browser-window-created', (_, window) => {
+    optimizer.watchWindowShortcuts(window)
+  })
+
+  // Window control IPC handlers (registered once outside createWindow)
   ipcMain.on('window:minimize', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win?.minimize()
@@ -80,31 +146,6 @@ function createWindow(): void {
     return win ? win.isFullScreen() : false
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-}
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Force dark mode for native titlebar, menus, and system dialogs to blend the separator line
-  nativeTheme.themeSource = 'dark'
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.oink.app')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-
   // File System IPC handlers
   ipcMain.handle('fs:openDirectory', async (event) => {
     const window = BrowserWindow.fromWebContents(event.sender)
@@ -115,7 +156,7 @@ app.whenReady().then(() => {
     if (result.canceled || result.filePaths.length === 0) {
       return null
     }
-    const dirPath = result.filePaths[0]
+    const dirPath = validatePath(result.filePaths[0])
     return {
       path: dirPath,
       name: basename(dirPath)
@@ -123,13 +164,14 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
+    const validDir = validatePath(dirPath)
     try {
-      const entries = await fs.readdir(dirPath, { withFileTypes: true })
+      const entries = await fs.readdir(validDir, { withFileTypes: true })
       return entries
         .filter((entry) => !entry.name.startsWith('.'))
         .map((entry) => ({
           name: entry.name,
-          path: join(dirPath, entry.name),
+          path: join(validDir, entry.name),
           isDir: entry.isDirectory()
         }))
         .sort((a, b) => {
@@ -138,56 +180,66 @@ app.whenReady().then(() => {
           return a.name.localeCompare(b.name)
         })
     } catch (error) {
-      console.error(`Failed to read directory: ${dirPath}`, error)
+      console.error(`Failed to read directory: ${validDir}`, error)
       throw error
     }
   })
 
   ipcMain.handle('fs:readFile', async (_, filePath: string) => {
+    const validPath = validatePath(filePath)
     try {
-      return await fs.readFile(filePath, 'utf-8')
+      return await fs.readFile(validPath, 'utf-8')
     } catch (error: unknown) {
       const err = error as NodeJS.ErrnoException
       if (err?.code === 'ENOENT') {
         return ''
       }
-      console.error(`Failed to read file ${filePath}:`, error)
+      console.error(`Failed to read file ${validPath}:`, error)
       throw error
     }
   })
 
   ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
-    await fs.writeFile(filePath, content, 'utf-8')
+    const validPath = validatePath(filePath)
+    await fs.writeFile(validPath, content, 'utf-8')
   })
 
   ipcMain.handle('fs:createFile', async (_, parentPath: string, name: string) => {
-    const filePath = join(parentPath, name)
+    const validParent = validatePath(parentPath)
+    const sanitizedName = name.replace(/[\\/:*?"<>|]/g, '_').trim()
+    const filePath = join(validParent, sanitizedName)
     await fs.writeFile(filePath, '', 'utf-8')
     return filePath
   })
 
   ipcMain.handle('fs:createFolder', async (_, parentPath: string, name: string) => {
-    const folderPath = join(parentPath, name)
+    const validParent = validatePath(parentPath)
+    const sanitizedName = name.replace(/[\\/:*?"<>|]/g, '_').trim()
+    const folderPath = join(validParent, sanitizedName)
     await fs.mkdir(folderPath, { recursive: true })
     return folderPath
   })
 
   ipcMain.handle('fs:deletePath', async (_, itemPath: string) => {
-    await fs.rm(itemPath, { recursive: true, force: true })
+    const validPath = validatePath(itemPath)
+    await fs.rm(validPath, { recursive: true, force: true })
   })
 
   ipcMain.handle('fs:renamePath', async (_, oldPath: string, newPath: string) => {
-    await fs.rename(oldPath, newPath)
+    const validOld = validatePath(oldPath)
+    const validNew = validatePath(newPath)
+    await fs.rename(validOld, validNew)
   })
 
   ipcMain.handle('fs:showItemInFolder', async (_, fullPath: string) => {
+    const validPath = validatePath(fullPath)
     try {
-      shell.showItemInFolder(fullPath)
+      shell.showItemInFolder(validPath)
       return true
     } catch (error) {
       console.error('Failed to show item in folder:', error)
       try {
-        await shell.openPath(fullPath)
+        await shell.openPath(validPath)
         return true
       } catch {
         return false
@@ -204,8 +256,36 @@ app.whenReady().then(() => {
     if (result.canceled || !result.filePath) {
       return null
     }
-    return result.filePath
+    return validatePath(result.filePath)
   })
+
+  // Save image or media attachment into <workspace>/assets/ directory
+  ipcMain.handle(
+    'fs:saveAttachment',
+    async (_, workspacePath: string, fileName: string, dataUrl: string) => {
+      const validWorkspace = validatePath(workspacePath)
+      const assetsDir = join(validWorkspace, 'assets')
+      await fs.mkdir(assetsDir, { recursive: true })
+
+      const ext = extname(fileName) || '.png'
+      const baseClean = basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
+      const finalFileName = `${Date.now()}_${baseClean}${ext}`
+      const targetFilePath = join(assetsDir, finalFileName)
+
+      // Decode base64 data URL
+      const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+
+      await fs.writeFile(targetFilePath, buffer)
+      return `assets/${finalFileName}`
+    }
+  )
+
+  let watchDebounceTimer: NodeJS.Timeout | null = null
+  const pendingWatchEvents = new Map<
+    string,
+    { eventType: string; filename: string; absolutePath: string; parentPath: string }
+  >()
 
   ipcMain.handle('fs:watchDirectory', async (event, dirPath: string) => {
     if (workspaceWatcher) {
@@ -217,7 +297,8 @@ app.whenReady().then(() => {
     if (!window) return
 
     try {
-      workspaceWatcher = watch(dirPath, { recursive: true }, (eventType, filename) => {
+      const validDir = validatePath(dirPath)
+      workspaceWatcher = watch(validDir, { recursive: true }, (eventType, filename) => {
         if (!filename) return
 
         // Filter out typical ignored directories/files to optimize performance
@@ -230,14 +311,28 @@ app.whenReady().then(() => {
           return
         }
 
-        const absolutePath = join(dirPath, filename)
+        const absolutePath = join(validDir, filename)
         const parentPath = dirname(absolutePath)
-        window.webContents.send('workspace:changed', {
+
+        pendingWatchEvents.set(absolutePath, {
           eventType,
           filename,
           absolutePath,
           parentPath
         })
+
+        if (watchDebounceTimer) {
+          clearTimeout(watchDebounceTimer)
+        }
+
+        watchDebounceTimer = setTimeout(() => {
+          if (!window.isDestroyed()) {
+            pendingWatchEvents.forEach((data) => {
+              window.webContents.send('workspace:changed', data)
+            })
+            pendingWatchEvents.clear()
+          }
+        }, 60)
       })
     } catch (error) {
       console.error('Failed to start directory watcher:', error)
@@ -245,48 +340,28 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('fs:closeWatcher', async () => {
+    if (watchDebounceTimer) {
+      clearTimeout(watchDebounceTimer)
+      watchDebounceTimer = null
+    }
+    pendingWatchEvents.clear()
     if (workspaceWatcher) {
       workspaceWatcher.close()
       workspaceWatcher = null
     }
   })
 
-  function getMarkdownFiles(dir: string, fileList: string[] = []): string[] {
-    try {
-      const files = readdirSync(dir)
-      for (const file of files) {
-        const filePath = join(dir, file)
-        try {
-          const fileStat = statSync(filePath)
-          if (fileStat.isDirectory()) {
-            if (
-              !file.startsWith('.') &&
-              file !== 'node_modules' &&
-              file !== 'out' &&
-              file !== 'build'
-            ) {
-              getMarkdownFiles(filePath, fileList)
-            }
-          } else if (file.endsWith('.md')) {
-            fileList.push(filePath)
-          }
-        } catch {
-          // Ignore inaccessible files
-        }
-      }
-    } catch {
-      // Ignore inaccessible directories
-    }
-    return fileList
-  }
-
+  // Asynchronous and non-blocking Graph generation with O(1) wikilink lookup
   ipcMain.handle('fs:getGraphData', async (_, rootPath: string) => {
     try {
-      const fileList: string[] = []
-      getMarkdownFiles(rootPath, fileList)
+      const validRoot = validatePath(rootPath)
+      const fileList = await getMarkdownFilesAsync(validRoot, [])
 
+      // Fast O(1) mapping of lowercase note title -> node ID / file path
+      const noteTitleMap = new Map<string, string>()
       const nodes = fileList.map((filePath) => {
         const name = basename(filePath).replace(/\.md$/, '')
+        noteTitleMap.set(name.toLowerCase(), filePath)
         return {
           id: filePath,
           name
@@ -295,24 +370,27 @@ app.whenReady().then(() => {
 
       const links: { source: string; target: string }[] = []
 
-      for (const filePath of fileList) {
+      // Read file contents asynchronously in parallel
+      const fileReadPromises = fileList.map(async (filePath) => {
         try {
-          const content = readFileSync(filePath, 'utf-8')
+          const content = await fs.readFile(filePath, 'utf-8')
           const matches = content.matchAll(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g)
           for (const match of matches) {
-            const targetName = match[1].trim()
-            const targetNode = nodes.find((n) => n.name.toLowerCase() === targetName.toLowerCase())
-            if (targetNode) {
+            const targetName = match[1].trim().toLowerCase()
+            const targetId = noteTitleMap.get(targetName)
+            if (targetId) {
               links.push({
                 source: filePath,
-                target: targetNode.id
+                target: targetId
               })
             }
           }
         } catch {
-          // Ignore inaccessible files that cannot be read
+          // Ignore inaccessible files
         }
-      }
+      })
+
+      await Promise.all(fileReadPromises)
 
       return { nodes, links }
     } catch (error) {
@@ -330,14 +408,9 @@ app.whenReady().then(() => {
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

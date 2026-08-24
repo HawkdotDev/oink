@@ -37,6 +37,7 @@ export default function GraphView({
   const attractionStrength = 0.05
   const gravityStrength = 0.02
   const friction = 0.9
+  const energyThreshold = 0.005
 
   // View state: pan (offsetX, offsetY) and scale (zoom)
   const [transform, setTransform] = useState({ x: 0, y: 0, zoom: 1.0 })
@@ -51,28 +52,32 @@ export default function GraphView({
   const hoveredNodeRef = useRef<GraphNode | null>(null)
   const isPanningRef = useRef(false)
 
+  // Simulation loop tracking
+  const animationIdRef = useRef<number | null>(null)
+  const isSimulatingRef = useRef(false)
+
   // Load graph data from main process
   const loadGraphData = useCallback(async (): Promise<void> => {
     setLoading(true)
     try {
       const data = await window.api.fs.getGraphData(workspacePath)
 
-      // Seed positions in a circle so they don't overlap initially
-      const width = canvasRef.current?.width || 800
-      const height = canvasRef.current?.height || 600
+      const canvas = canvasRef.current
+      const width = canvas ? canvas.clientWidth || 800 : 800
+      const height = canvas ? canvas.clientHeight || 600 : 600
       const centerX = width / 2
       const centerY = height / 2
       const radius = Math.min(width, height) / 3
 
       const graphNodes: GraphNode[] = data.nodes.map((node, i) => {
-        const angle = (i / data.nodes.length) * Math.PI * 2
+        const angle = (i / Math.max(1, data.nodes.length)) * Math.PI * 2
         return {
           id: node.id,
           name: node.name,
           x: centerX + Math.cos(angle) * radius + (Math.random() - 0.5) * 20,
           y: centerY + Math.sin(angle) * radius + (Math.random() - 0.5) * 20,
-          vx: 0,
-          vy: 0,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
           radius: 6
         }
       })
@@ -91,23 +96,103 @@ export default function GraphView({
     loadGraphData()
   }, [loadGraphData])
 
-  // Main physics simulation loop
-  useEffect(() => {
-    if (nodes.length === 0) return
-
-    let animationId: number
+  // Draw graph frame with HiDPI Retina support
+  const drawGraph = useCallback((): void => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const runSimulation = (): void => {
-      const w = canvas.width
-      const h = canvas.height
-      const centerX = w / 2
-      const centerY = h / 2
+    const dpr = window.devicePixelRatio || 1
 
-      // 1. Calculate repulsion forces between all nodes
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.save()
+
+    // 1. High-DPI Canvas scaling
+    ctx.scale(dpr, dpr)
+
+    // 2. Pan & zoom transform
+    const { x, y, zoom } = transformRef.current
+    ctx.translate(x, y)
+    ctx.scale(zoom, zoom)
+
+    const nodeMap = new Map<string, GraphNode>()
+    nodes.forEach((n) => nodeMap.set(n.id, n))
+
+    // Highlight connections if hovered
+    const hovered = hoveredNodeRef.current
+    const connectedNodeIds = new Set<string>()
+    if (hovered) {
+      connectedNodeIds.add(hovered.id)
+      links.forEach((l) => {
+        if (l.source === hovered.id) connectedNodeIds.add(l.target)
+        if (l.target === hovered.id) connectedNodeIds.add(l.source)
+      })
+    }
+
+    // Draw links / edges
+    ctx.lineWidth = 1
+    for (const link of links) {
+      const n1 = nodeMap.get(link.source)
+      const n2 = nodeMap.get(link.target)
+      if (n1 && n2) {
+        const isHighlighted = hovered && (link.source === hovered.id || link.target === hovered.id)
+        ctx.strokeStyle = isHighlighted ? 'rgba(168, 85, 247, 0.85)' : 'rgba(255, 255, 255, 0.08)'
+        ctx.beginPath()
+        ctx.moveTo(n1.x, n1.y)
+        ctx.lineTo(n2.x, n2.y)
+        ctx.stroke()
+      }
+    }
+
+    // Draw nodes
+    for (const node of nodes) {
+      const isHovered = hovered && node.id === hovered.id
+      const isConnected = hovered && connectedNodeIds.has(node.id)
+
+      // Draw node circle
+      ctx.beginPath()
+      ctx.arc(node.x, node.y, node.radius + (isHovered ? 2.5 : 0), 0, Math.PI * 2)
+      if (isHovered) {
+        ctx.fillStyle = '#c084fc'
+        ctx.shadowColor = 'rgba(168, 85, 247, 0.7)'
+        ctx.shadowBlur = 12
+      } else if (isConnected) {
+        ctx.fillStyle = '#a855f7'
+        ctx.shadowBlur = 0
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+        ctx.shadowBlur = 0
+      }
+      ctx.fill()
+      ctx.shadowBlur = 0
+
+      // Draw node label
+      ctx.font = '500 11px Inter, sans-serif'
+      ctx.fillStyle = isHovered || isConnected ? '#f4f4f5' : 'rgba(255, 255, 255, 0.4)'
+      ctx.textAlign = 'center'
+      ctx.fillText(node.name, node.x, node.y - 12)
+    }
+
+    ctx.restore()
+  }, [nodes, links])
+
+  // Physics simulation loop with energy threshold cooling
+  const startSimulation = useCallback(() => {
+    if (isSimulatingRef.current || nodes.length === 0) return
+
+    isSimulatingRef.current = true
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const tick = (): void => {
+      const cssWidth = canvas.clientWidth || 800
+      const cssHeight = canvas.clientHeight || 600
+      const centerX = cssWidth / 2
+      const centerY = cssHeight / 2
+
+      // 1. Calculate repulsion forces
       for (let i = 0; i < nodes.length; i++) {
         const n1 = nodes[i]
         for (let j = i + 1; j < nodes.length; j++) {
@@ -117,7 +202,7 @@ export default function GraphView({
           const distSqr = dx * dx + dy * dy || 1
           const dist = Math.sqrt(distSqr)
 
-          if (dist < 300) {
+          if (dist < 320) {
             const force = repulsionStrength / distSqr
             const fx = (dx / dist) * force
             const fy = (dy / dist) * force
@@ -129,7 +214,7 @@ export default function GraphView({
         }
       }
 
-      // 2. Calculate attraction forces along link connections
+      // 2. Calculate attraction forces
       const nodeMap = new Map<string, GraphNode>()
       nodes.forEach((n) => nodeMap.set(n.id, n))
 
@@ -150,108 +235,85 @@ export default function GraphView({
         }
       }
 
-      // 3. Gravity towards the screen center
+      // 3. Gravity towards center & velocity integration
+      let totalKineticEnergy = 0
       for (const node of nodes) {
         const dx = centerX - node.x
         const dy = centerY - node.y
         node.vx += dx * gravityStrength
         node.vy += dy * gravityStrength
-      }
 
-      // 4. Update positions with damping
-      for (const node of nodes) {
-        if (node === activeDraggedNodeRef.current) continue
-        node.x += node.vx
-        node.y += node.vy
-        node.vx *= friction
-        node.vy *= friction
-      }
-
-      // 5. Draw the graph
-      ctx.clearRect(0, 0, w, h)
-      ctx.save()
-
-      // Apply zoom & pan transforms
-      const { x, y, zoom } = transformRef.current
-      ctx.translate(x, y)
-      ctx.scale(zoom, zoom)
-
-      // Highlight connections if hovered
-      const hovered = hoveredNodeRef.current
-      const connectedNodeIds = new Set<string>()
-      if (hovered) {
-        connectedNodeIds.add(hovered.id)
-        links.forEach((l) => {
-          if (l.source === hovered.id) connectedNodeIds.add(l.target)
-          if (l.target === hovered.id) connectedNodeIds.add(l.source)
-        })
-      }
-
-      // Draw links/edges
-      ctx.lineWidth = 1
-      for (const link of links) {
-        const n1 = nodeMap.get(link.source)
-        const n2 = nodeMap.get(link.target)
-        if (n1 && n2) {
-          const isHighlighted =
-            hovered && (link.source === hovered.id || link.target === hovered.id)
-          ctx.strokeStyle = isHighlighted ? 'rgba(168, 85, 247, 0.8)' : 'rgba(255, 255, 255, 0.08)'
-          ctx.beginPath()
-          ctx.moveTo(n1.x, n1.y)
-          ctx.lineTo(n2.x, n2.y)
-          ctx.stroke()
+        if (node !== activeDraggedNodeRef.current) {
+          node.x += node.vx
+          node.y += node.vy
+          node.vx *= friction
+          node.vy *= friction
+          totalKineticEnergy += node.vx * node.vx + node.vy * node.vy
         }
       }
 
-      // Draw nodes
-      for (const node of nodes) {
-        const isHovered = hovered && node.id === hovered.id
-        const isConnected = hovered && connectedNodeIds.has(node.id)
+      // 4. Render frame
+      drawGraph()
 
-        // Draw node circle
-        ctx.beginPath()
-        ctx.arc(node.x, node.y, node.radius + (isHovered ? 2 : 0), 0, Math.PI * 2)
-        if (isHovered) {
-          ctx.fillStyle = '#c084fc'
-          ctx.shadowColor = 'rgba(168, 85, 247, 0.6)'
-          ctx.shadowBlur = 10
-        } else if (isConnected) {
-          ctx.fillStyle = '#a855f7'
-          ctx.shadowBlur = 0
-        } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)'
-          ctx.shadowBlur = 0
+      // 5. Check if simulation has cooled down
+      const isInteracting = Boolean(activeDraggedNodeRef.current || isPanningRef.current)
+      if (totalKineticEnergy < energyThreshold && !isInteracting) {
+        isSimulatingRef.current = false
+        if (animationIdRef.current) {
+          cancelAnimationFrame(animationIdRef.current)
+          animationIdRef.current = null
         }
-        ctx.fill()
-        ctx.shadowBlur = 0
-
-        // Draw node name label
-        ctx.font = '10px sans-serif'
-        ctx.fillStyle = isHovered || isConnected ? '#e3e3e3' : 'rgba(255, 255, 255, 0.35)'
-        ctx.textAlign = 'center'
-        ctx.fillText(node.name, node.x, node.y - 12)
+        return
       }
 
-      ctx.restore()
-      animationId = requestAnimationFrame(runSimulation)
+      animationIdRef.current = requestAnimationFrame(tick)
     }
 
-    animationId = requestAnimationFrame(runSimulation)
-    return () => cancelAnimationFrame(animationId)
-  }, [nodes, links])
+    animationIdRef.current = requestAnimationFrame(tick)
+  }, [nodes, links, attractionStrength, drawGraph, friction, gravityStrength, repulsionStrength])
 
-  // Resize canvas to fill container
+  // Trigger simulation whenever nodes or links change
+  useEffect(() => {
+    startSimulation()
+    return (): void => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current)
+        animationIdRef.current = null
+      }
+      isSimulatingRef.current = false
+    }
+  }, [startSimulation])
+
+  // Redraw when transform changes even if simulation is sleeping
+  useEffect(() => {
+    drawGraph()
+  }, [transform, drawGraph])
+
+  // High-DPI canvas resize listener
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
     const resize = (): void => {
-      canvas.width = canvas.parentElement?.clientWidth || 800
-      canvas.height = canvas.parentElement?.clientHeight || 600
+      const parent = canvas.parentElement
+      if (!parent) return
+      const dpr = window.devicePixelRatio || 1
+      const width = parent.clientWidth || 800
+      const height = parent.clientHeight || 600
+
+      canvas.width = Math.round(width * dpr)
+      canvas.height = Math.round(height * dpr)
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+
+      drawGraph()
+      startSimulation()
     }
+
     resize()
     window.addEventListener('resize', resize)
-    return () => window.removeEventListener('resize', resize)
-  }, [])
+    return (): void => window.removeEventListener('resize', resize)
+  }, [drawGraph, startSimulation])
 
   // Helper to convert screen mouse coords to Canvas graph coordinate space
   const getGraphCoords = (clientX: number, clientY: number): { x: number; y: number } => {
@@ -271,12 +333,11 @@ export default function GraphView({
   const handleMouseDown = (e: React.MouseEvent): void => {
     const coords = getGraphCoords(e.clientX, e.clientY)
 
-    // Check if clicked inside a node
     let clickedNode: GraphNode | null = null
     for (const node of nodes) {
       const dx = coords.x - node.x
       const dy = coords.y - node.y
-      if (dx * dx + dy * dy < (node.radius + 8) * (node.radius + 8)) {
+      if (dx * dx + dy * dy < (node.radius + 10) * (node.radius + 10)) {
         clickedNode = node
         break
       }
@@ -284,6 +345,7 @@ export default function GraphView({
 
     if (clickedNode) {
       activeDraggedNodeRef.current = clickedNode
+      startSimulation()
     } else {
       isPanningRef.current = true
     }
@@ -296,17 +358,22 @@ export default function GraphView({
 
     const coords = getGraphCoords(e.clientX, e.clientY)
 
-    // Handle node hover checks
     let foundHover: GraphNode | null = null
     for (const node of nodes) {
       const dx = coords.x - node.x
       const dy = coords.y - node.y
-      if (dx * dx + dy * dy < (node.radius + 8) * (node.radius + 8)) {
+      if (dx * dx + dy * dy < (node.radius + 10) * (node.radius + 10)) {
         foundHover = node
         break
       }
     }
+
+    const prevHover = hoveredNodeRef.current
     hoveredNodeRef.current = foundHover
+
+    if (foundHover !== prevHover) {
+      drawGraph()
+    }
 
     if (!dragStartRef.current) return
 
@@ -314,11 +381,12 @@ export default function GraphView({
     const dy = e.clientY - dragStartRef.current.y
 
     if (activeDraggedNodeRef.current) {
-      // Drag node
       activeDraggedNodeRef.current.x = coords.x
       activeDraggedNodeRef.current.y = coords.y
+      activeDraggedNodeRef.current.vx = 0
+      activeDraggedNodeRef.current.vy = 0
+      startSimulation()
     } else if (isPanningRef.current) {
-      // Pan camera
       setTransform((prev) => ({
         ...prev,
         x: prev.x + dx,
@@ -330,7 +398,6 @@ export default function GraphView({
 
   const handleMouseUp = (e: React.MouseEvent): void => {
     if (dragStartRef.current) {
-      // If we didn't drag much, treat it as a click!
       const elapsedX = Math.abs(e.clientX - (dragStartRef.current.x || 0))
       const elapsedY = Math.abs(e.clientY - (dragStartRef.current.y || 0))
 
@@ -342,6 +409,7 @@ export default function GraphView({
     dragStartRef.current = null
     activeDraggedNodeRef.current = null
     isPanningRef.current = false
+    startSimulation()
   }
 
   const handleWheel = (e: React.WheelEvent): void => {
@@ -361,6 +429,7 @@ export default function GraphView({
   // Navigation toolbar actions
   const handleReset = (): void => {
     setTransform({ x: 0, y: 0, zoom: 1.0 })
+    startSimulation()
   }
 
   const handleZoomIn = (): void => {

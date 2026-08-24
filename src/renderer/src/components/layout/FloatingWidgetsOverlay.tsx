@@ -5,7 +5,7 @@ import AssistantPanel from './AssistantPanel'
 import DocumentStatsWidget from './DocumentStatsWidget'
 import QuickTerminalWidget from './QuickTerminalWidget'
 import CodeSnippetsWidget from './CodeSnippetsWidget'
-import OutlineWidget from './OutlineWidget'
+import OutlineWidget, { OutlineHeadingItem } from './OutlineWidget'
 import { WidgetState, WidgetLayout, ViewMode } from '../../types'
 
 interface FloatingWidgetsOverlayProps {
@@ -14,7 +14,9 @@ interface FloatingWidgetsOverlayProps {
   widgetZIndexes: Record<string, number>
   widgetPositions: Record<string, WidgetLayout>
   activeFilePath: string | null
+  workspacePath?: string | null
   fileContents: Record<string, string>
+  headings?: OutlineHeadingItem[]
   onUpdateFileContent?: (filePath: string, content: string) => void
   bringWidgetToFront: (id: string) => void
   handleToggleWidget: (id: keyof WidgetState) => void
@@ -33,7 +35,9 @@ function FloatingWidgetsOverlayComponent({
   widgetZIndexes,
   widgetPositions,
   activeFilePath,
+  workspacePath,
   fileContents,
+  headings,
   onUpdateFileContent,
   bringWidgetToFront,
   handleToggleWidget,
@@ -44,6 +48,7 @@ function FloatingWidgetsOverlayComponent({
   if (viewMode === 'graph') return null
 
   const activeText = activeFilePath ? fileContents[activeFilePath] || '' : ''
+  const activeFileName = activeFilePath ? activeFilePath.split(/[\\/]/).pop() : null
 
   return (
     <>
@@ -100,10 +105,7 @@ function FloatingWidgetsOverlayComponent({
           onClose={(): void => handleToggleWidget('stats')}
           onLayoutChange={(pos, size): void => handleWidgetLayoutChange('stats', pos, size)}
         >
-          <DocumentStatsWidget
-            content={activeFilePath ? fileContents[activeFilePath] || '' : ''}
-            activeFileName={activeFilePath ? activeFilePath.split(/[\\/]/).pop() : undefined}
-          />
+          <DocumentStatsWidget content={activeText} activeFileName={activeFileName || undefined} />
         </FloatingWindow>
       )}
 
@@ -125,7 +127,11 @@ function FloatingWidgetsOverlayComponent({
           onClose={(): void => handleToggleWidget('terminal')}
           onLayoutChange={(pos, size): void => handleWidgetLayoutChange('terminal', pos, size)}
         >
-          <QuickTerminalWidget />
+          <QuickTerminalWidget
+            workspacePath={workspacePath}
+            activeFileName={activeFileName}
+            activeContent={activeText}
+          />
         </FloatingWindow>
       )}
 
@@ -176,7 +182,7 @@ function FloatingWidgetsOverlayComponent({
           onClose={(): void => handleToggleWidget('outline')}
           onLayoutChange={(pos, size): void => handleWidgetLayoutChange('outline', pos, size)}
         >
-          <OutlineWidget content={activeText} />
+          <OutlineWidget content={activeText} headings={headings} />
         </FloatingWindow>
       )}
     </>

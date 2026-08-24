@@ -106,12 +106,15 @@ export interface MarkdownBlockData {
     | 'list'
     | 'checklist'
     | 'quote'
+    | 'code'
     | 'delimiter'
     | 'image'
     | 'video'
     | 'embed'
   data: {
     text?: string
+    code?: string
+    language?: string
     level?: number
     style?: 'unordered' | 'ordered'
     items?: string[] | { text: string; checked: boolean }[]
@@ -142,6 +145,9 @@ export function parseMarkdownToBlocks(text: string): MarkdownBlockData[] {
   let currentList: { style: 'unordered' | 'ordered'; items: string[] } | null = null
   let currentChecklist: { items: { text: string; checked: boolean }[] } | null = null
   let currentParagraphLines: string[] = []
+  let inCodeBlock = false
+  let currentCodeLines: string[] = []
+  let currentCodeLang = ''
 
   const flushParagraph = (): void => {
     if (currentParagraphLines.length > 0) {
@@ -182,6 +188,36 @@ export function parseMarkdownToBlocks(text: string): MarkdownBlockData[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
+
+    // Handle fenced code block content
+    if (inCodeBlock) {
+      if (trimmed.startsWith('```')) {
+        blocks.push({
+          type: 'code',
+          data: {
+            code: currentCodeLines.join('\n'),
+            language: currentCodeLang
+          }
+        })
+        currentCodeLines = []
+        currentCodeLang = ''
+        inCodeBlock = false
+        continue
+      }
+      currentCodeLines.push(line)
+      continue
+    }
+
+    // Start of fenced code block (```lang)
+    if (trimmed.startsWith('```')) {
+      flushParagraph()
+      flushList()
+      flushChecklist()
+      inCodeBlock = true
+      currentCodeLang = trimmed.slice(3).trim()
+      currentCodeLines = []
+      continue
+    }
 
     if (!trimmed) {
       flushParagraph()
@@ -329,6 +365,17 @@ export function parseMarkdownToBlocks(text: string): MarkdownBlockData[] {
     flushList()
     flushChecklist()
     currentParagraphLines.push(line)
+  }
+
+  // Handle trailing unclosed code block if any
+  if (inCodeBlock && currentCodeLines.length > 0) {
+    blocks.push({
+      type: 'code',
+      data: {
+        code: currentCodeLines.join('\n'),
+        language: currentCodeLang
+      }
+    })
   }
 
   flushParagraph()

@@ -23,6 +23,8 @@ const api = {
       ipcRenderer.invoke('fs:showItemInFolder', fullPath),
     showSaveDialog: (defaultName: string): Promise<string | null> =>
       ipcRenderer.invoke('fs:showSaveDialog', defaultName),
+    saveAttachment: (workspacePath: string, fileName: string, dataUrl: string): Promise<string> =>
+      ipcRenderer.invoke('fs:saveAttachment', workspacePath, fileName, dataUrl),
     watchDirectory: (dirPath: string): Promise<void> =>
       ipcRenderer.invoke('fs:watchDirectory', dirPath),
     closeWatcher: (): Promise<void> => ipcRenderer.invoke('fs:closeWatcher'),
