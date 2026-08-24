@@ -1,6 +1,14 @@
 import { MarkdownMetadata } from '../types'
 import { parseMarkdownMetadata, serializeMarkdownMetadata, stripFrontmatter } from './metadataUtils'
+import { normalizePath } from './pathUtils'
 import { WorkerResultPayload } from '../workers/indexerWorker'
+
+export const OINK_METADATA_DIR = '.oink'
+export const OINK_METADATA_FILE = 'metadata.json'
+
+const LEGACY_NOTIE_DIR = '.notie'
+const LEGACY_METADATA_FILE = 'metadata.json'
+const LEGACY_PACKAGE_FILE = 'package.json'
 
 export interface WorkspaceMetadataStore {
   icons: Record<string, string>
@@ -9,6 +17,17 @@ export interface WorkspaceMetadataStore {
   showIcon: Record<string, boolean | undefined>
   showFileName: Record<string, boolean | undefined>
   customProps: Record<string, Record<string, unknown>>
+}
+
+export interface StoredWorkspaceMetadataFile {
+  version: number
+  updatedAt?: number
+  icons?: Record<string, string>
+  banners?: Record<string, string>
+  showCover?: Record<string, boolean | undefined>
+  showIcon?: Record<string, boolean | undefined>
+  showFileName?: Record<string, boolean | undefined>
+  customProps?: Record<string, Record<string, unknown>>
 }
 
 class AsyncOinkMetadataEngine {
@@ -22,6 +41,8 @@ class AsyncOinkMetadataEngine {
     showFileName: {},
     customProps: {}
   }
+  private currentWorkspacePath: string | null = null
+  private saveDebounceTimer: NodeJS.Timeout | null = null
 
   constructor() {
     this.initWorker()
@@ -42,10 +63,115 @@ class AsyncOinkMetadataEngine {
           }
         }
       } catch {
-        // Fallback gracefully to synchronous parsing if worker cannot be initialized
         this.worker = null
       }
     }
+  }
+
+  public getMetadataFilePath(workspacePath: string): string {
+    const norm = normalizePath(workspacePath)
+    return `${norm}/${OINK_METADATA_DIR}/${OINK_METADATA_FILE}`
+  }
+
+  /**
+   * Load workspace metadata from .oink/metadata.json (with automatic fallback and migration from legacy .notie)
+   */
+  public async loadWorkspaceMetadataAsync(workspacePath: string): Promise<WorkspaceMetadataStore> {
+    const norm = normalizePath(workspacePath)
+    if (!norm) return this.store
+    this.currentWorkspacePath = norm
+
+    const primaryPath = `${norm}/${OINK_METADATA_DIR}/${OINK_METADATA_FILE}`
+    const legacyPath1 = `${norm}/${LEGACY_NOTIE_DIR}/${LEGACY_METADATA_FILE}`
+    const legacyPath2 = `${norm}/${LEGACY_NOTIE_DIR}/${LEGACY_PACKAGE_FILE}`
+
+    let rawData: string | null = null
+    let isLegacy = false
+
+    try {
+      rawData = await window.api.fs.readFile(primaryPath)
+    } catch {
+      rawData = null
+    }
+
+    if (!rawData) {
+      try {
+        rawData = await window.api.fs.readFile(legacyPath1)
+        if (rawData) isLegacy = true
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!rawData) {
+      try {
+        rawData = await window.api.fs.readFile(legacyPath2)
+        if (rawData) isLegacy = true
+      } catch {
+        // ignore
+      }
+    }
+
+    if (rawData) {
+      try {
+        const parsed = JSON.parse(rawData) as StoredWorkspaceMetadataFile
+        this.store = {
+          icons: parsed.icons || {},
+          banners: parsed.banners || {},
+          showCover: parsed.showCover || {},
+          showIcon: parsed.showIcon || {},
+          showFileName: parsed.showFileName || {},
+          customProps: parsed.customProps || {}
+        }
+
+        // Automatically migrate legacy .notie data to .oink/metadata.json
+        if (isLegacy) {
+          void this.saveWorkspaceMetadataAsync(norm)
+        }
+      } catch (err) {
+        console.error('Error parsing workspace metadata JSON:', err)
+      }
+    }
+
+    return this.store
+  }
+
+  /**
+   * Save workspace metadata to .oink/metadata.json
+   */
+  public async saveWorkspaceMetadataAsync(workspacePath?: string): Promise<void> {
+    const targetWs = workspacePath ? normalizePath(workspacePath) : this.currentWorkspacePath
+    if (!targetWs) return
+
+    const filePath = `${targetWs}/${OINK_METADATA_DIR}/${OINK_METADATA_FILE}`
+    const payload: StoredWorkspaceMetadataFile = {
+      version: 1,
+      updatedAt: Date.now(),
+      icons: this.store.icons,
+      banners: this.store.banners,
+      showCover: this.store.showCover,
+      showIcon: this.store.showIcon,
+      showFileName: this.store.showFileName,
+      customProps: this.store.customProps
+    }
+
+    try {
+      await window.api.fs.writeFile(filePath, JSON.stringify(payload, null, 2))
+    } catch (err) {
+      console.error(`Failed to save metadata to ${filePath}:`, err)
+    }
+  }
+
+  /**
+   * Schedules a debounced disk save of workspace metadata to .oink/metadata.json
+   */
+  public scheduleSave(workspacePath?: string): void {
+    if (this.saveDebounceTimer) {
+      clearTimeout(this.saveDebounceTimer)
+    }
+    this.saveDebounceTimer = setTimeout(() => {
+      void this.saveWorkspaceMetadataAsync(workspacePath)
+    }, 500)
   }
 
   /**
@@ -151,30 +277,6 @@ class AsyncOinkMetadataEngine {
     return { cleanContent: parsed.content, metadata: parsed.metadata }
   }
 
-  /**
-   * Sync prepare for save fallback
-   */
-  public prepareForSave(
-    bodyContent: string,
-    relPath: string,
-    overrideMeta?: MarkdownMetadata
-  ): string {
-    const key = relPath.toLowerCase()
-    const metadata: MarkdownMetadata = {
-      icon: overrideMeta?.icon !== undefined ? overrideMeta.icon : this.store.icons[key],
-      banner: overrideMeta?.banner !== undefined ? overrideMeta.banner : this.store.banners[key],
-      showCover:
-        overrideMeta?.showCover !== undefined ? overrideMeta.showCover : this.store.showCover[key],
-      showIcon:
-        overrideMeta?.showIcon !== undefined ? overrideMeta.showIcon : this.store.showIcon[key],
-      showFileName:
-        overrideMeta?.showFileName !== undefined
-          ? overrideMeta.showFileName
-          : this.store.showFileName[key]
-    }
-    return serializeMarkdownMetadata(bodyContent, metadata)
-  }
-
   public getIcon(relPath: string): string | undefined {
     return this.store.icons[relPath.toLowerCase()]
   }
@@ -186,6 +288,7 @@ class AsyncOinkMetadataEngine {
     } else {
       delete this.store.icons[key]
     }
+    this.scheduleSave()
   }
 
   public getBanner(relPath: string): string | undefined {
@@ -199,6 +302,7 @@ class AsyncOinkMetadataEngine {
     } else {
       delete this.store.banners[key]
     }
+    this.scheduleSave()
   }
 
   public setShowCover(relPath: string, val: boolean | undefined): void {
@@ -208,6 +312,7 @@ class AsyncOinkMetadataEngine {
     } else {
       this.store.showCover[key] = val
     }
+    this.scheduleSave()
   }
 
   public setShowIcon(relPath: string, val: boolean | undefined): void {
@@ -217,6 +322,7 @@ class AsyncOinkMetadataEngine {
     } else {
       this.store.showIcon[key] = val
     }
+    this.scheduleSave()
   }
 
   public setShowFileName(relPath: string, val: boolean | undefined): void {
@@ -226,6 +332,7 @@ class AsyncOinkMetadataEngine {
     } else {
       this.store.showFileName[key] = val
     }
+    this.scheduleSave()
   }
 
   public clearFileOverrides(relPath: string): void {
@@ -233,6 +340,7 @@ class AsyncOinkMetadataEngine {
     delete this.store.showCover[key]
     delete this.store.showIcon[key]
     delete this.store.showFileName[key]
+    this.scheduleSave()
   }
 
   public getFileMetadata(relPath: string): MarkdownMetadata {

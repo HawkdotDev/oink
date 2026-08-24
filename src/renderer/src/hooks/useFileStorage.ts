@@ -77,6 +77,42 @@ export function useFileStorage(
     )
   }, [activeFileMeta])
 
+  // Load workspace metadata from .oink/metadata.json on workspace change
+  useEffect(() => {
+    if (!workspacePath) return
+    void metadataEngine.loadWorkspaceMetadataAsync(workspacePath).then((store) => {
+      if (store.icons && Object.keys(store.icons).length > 0) {
+        setFileIcons((prev) => ({ ...store.icons, ...prev }))
+      }
+      if (store.banners && Object.keys(store.banners).length > 0) {
+        setFileBanners((prev) => ({ ...store.banners, ...prev }))
+      }
+      if (
+        (store.showCover && Object.keys(store.showCover).length > 0) ||
+        (store.showIcon && Object.keys(store.showIcon).length > 0) ||
+        (store.showFileName && Object.keys(store.showFileName).length > 0)
+      ) {
+        setFileMetadataMap((prev) => {
+          const next = { ...prev }
+          const allKeys = new Set([
+            ...Object.keys(store.showCover || {}),
+            ...Object.keys(store.showIcon || {}),
+            ...Object.keys(store.showFileName || {})
+          ])
+          allKeys.forEach((k) => {
+            next[k] = {
+              ...next[k],
+              showCover: store.showCover[k],
+              showIcon: store.showIcon[k],
+              showFileName: store.showFileName[k]
+            }
+          })
+          return next
+        })
+      }
+    })
+  }, [workspacePath])
+
   const loadFileContent = useCallback(
     async (filePath: string): Promise<string> => {
       const normPath = normalizePath(filePath)

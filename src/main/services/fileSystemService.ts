@@ -1,5 +1,5 @@
 import { ipcMain, dialog, BrowserWindow, shell } from 'electron'
-import { join, basename, extname } from 'path'
+import { join, basename, extname, dirname } from 'path'
 import * as fs from 'fs/promises'
 import { validatePath } from './pathValidator'
 
@@ -61,6 +61,8 @@ export function registerFileSystemHandlers(): void {
 
   ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
     const validPath = validatePath(filePath)
+    const parentDir = dirname(validPath)
+    await fs.mkdir(parentDir, { recursive: true })
     await fs.writeFile(validPath, content, 'utf-8')
   })
 
