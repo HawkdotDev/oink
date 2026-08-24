@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 import EditorJS, {
   BlockToolConstructable,
   InlineToolConstructable,
@@ -715,7 +715,7 @@ interface BlockEditorProps {
   readOnly?: boolean
 }
 
-export default function BlockEditor({
+function BlockEditorComponent({
   value,
   onChange,
   activeFilePath,
@@ -764,6 +764,31 @@ export default function BlockEditor({
       // Instance may have unmounted or already been destroyed
     }
   }
+
+  // Ref to hold any pending debounced change timer
+  const changeDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendingApiRef = useRef<any>(null)
+
+  const flushPendingChanges = useCallback(async (): Promise<void> => {
+    if (changeDebounceTimerRef.current) {
+      clearTimeout(changeDebounceTimerRef.current)
+      changeDebounceTimerRef.current = null
+    }
+    const api = pendingApiRef.current || editorInstanceRef.current
+    if (!api) return
+    try {
+      const savedData = await api.saver.save()
+      const markdown = serializeEditorJSToMarkdown(savedData as EditorJSData)
+      if (markdown !== lastSerializedRef.current) {
+        isLocalChangeRef.current = true
+        lastSerializedRef.current = markdown
+        onChangeRef.current(markdown)
+      }
+    } catch (err) {
+      console.error('Error saving EditorJS data on change:', err)
+    }
+  }, [])
 
   // Initialize/reinitialize editor when file changes
   useEffect(() => {
@@ -948,17 +973,14 @@ export default function BlockEditor({
             new DragDrop(inst)
           }
         },
-        onChange: async (api) => {
-          try {
-            const savedData = await api.saver.save()
-            const markdown = serializeEditorJSToMarkdown(savedData as EditorJSData)
-
-            isLocalChangeRef.current = true
-            lastSerializedRef.current = markdown
-            onChangeRef.current(markdown)
-          } catch (err) {
-            console.error('Error saving EditorJS data on change:', err)
+        onChange: (api) => {
+          pendingApiRef.current = api
+          if (changeDebounceTimerRef.current) {
+            clearTimeout(changeDebounceTimerRef.current)
           }
+          changeDebounceTimerRef.current = setTimeout(() => {
+            void flushPendingChanges()
+          }, 150)
         }
       })
 
@@ -970,13 +992,14 @@ export default function BlockEditor({
 
     return () => {
       isDestroyed = true
+      void flushPendingChanges()
       if (editor) {
         const instanceToDestroy = editor
         editorInstanceRef.current = null
         destroyingPromiseRef.current = destroyInstance(instanceToDestroy)
       }
     }
-  }, [activeFilePath, readOnly])
+  }, [activeFilePath, readOnly, flushPendingChanges])
 
   // Handle value updates from parent (e.g. external edits, reload, etc.)
   useEffect(() => {
@@ -1140,3 +1163,5 @@ export default function BlockEditor({
     </div>
   )
 }
+
+export default React.memo(BlockEditorComponent)

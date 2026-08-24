@@ -28,7 +28,7 @@ const SNIPPETS = [
   }
 ]
 
-export default function CodeSnippetsWidget({
+function CodeSnippetsWidgetComponent({
   onInsertSnippet
 }: CodeSnippetsWidgetProps): React.JSX.Element {
   const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null)
@@ -79,3 +79,5 @@ export default function CodeSnippetsWidget({
     </div>
   )
 }
+
+export default React.memo(CodeSnippetsWidgetComponent)

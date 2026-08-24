@@ -131,7 +131,7 @@ interface PluginsWidgetProps {
   onTogglePlugin: (pluginId: string) => void
 }
 
-export default function PluginsWidget({
+function PluginsWidgetComponent({
   enabledPlugins,
   onTogglePlugin
 }: PluginsWidgetProps): React.JSX.Element {
@@ -348,3 +348,5 @@ export default function PluginsWidget({
     </div>
   )
 }
+
+export default React.memo(PluginsWidgetComponent)

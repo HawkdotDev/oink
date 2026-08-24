@@ -6,7 +6,7 @@ interface DocumentStatsWidgetProps {
   activeFileName?: string
 }
 
-export default function DocumentStatsWidget({
+function DocumentStatsWidgetComponent({
   content,
   activeFileName
 }: DocumentStatsWidgetProps): React.JSX.Element {
@@ -101,3 +101,5 @@ export default function DocumentStatsWidget({
     </div>
   )
 }
+
+export default React.memo(DocumentStatsWidgetComponent)

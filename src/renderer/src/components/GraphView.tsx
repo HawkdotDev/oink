@@ -22,7 +22,7 @@ interface GraphViewProps {
   onClose: () => void
 }
 
-export default function GraphView({
+function GraphViewComponent({
   workspacePath,
   onNodeClick,
   onClose
@@ -501,3 +501,5 @@ export default function GraphView({
     </div>
   )
 }
+
+export default React.memo(GraphViewComponent)

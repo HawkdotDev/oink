@@ -28,6 +28,11 @@ function validatePath(p: unknown): string {
   return normalized
 }
 
+// Performance & Hardware Acceleration Switches
+app.commandLine.appendSwitch('enable-gpu-rasterization')
+app.commandLine.appendSwitch('enable-zero-copy')
+app.commandLine.appendSwitch('ignore-gpu-blocklist')
+
 function createWindow(): void {
   const iconPath = process.platform === 'win32' ? iconIco : iconPng
   const appIcon = nativeImage.createFromPath(iconPath)
@@ -43,7 +48,8 @@ function createWindow(): void {
     icon: appIcon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      backgroundThrottling: false
     }
   })
 

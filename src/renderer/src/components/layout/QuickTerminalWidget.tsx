@@ -7,7 +7,7 @@ interface QuickTerminalWidgetProps {
   activeContent?: string
 }
 
-export default function QuickTerminalWidget({
+function QuickTerminalWidgetComponent({
   workspacePath,
   activeFileName,
   activeContent = ''
@@ -210,3 +210,5 @@ export default function QuickTerminalWidget({
     </div>
   )
 }
+
+export default React.memo(QuickTerminalWidgetComponent)

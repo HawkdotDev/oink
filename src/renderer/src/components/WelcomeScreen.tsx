@@ -5,7 +5,7 @@ interface WelcomeScreenProps {
   workspacePath: string | null
 }
 
-export default function WelcomeScreen({ workspacePath }: WelcomeScreenProps): React.JSX.Element {
+function WelcomeScreenComponent({ workspacePath }: WelcomeScreenProps): React.JSX.Element {
   return (
     <div className="welcome-workspace">
       <div className="flex flex-col items-center mb-3">
@@ -36,3 +36,5 @@ export default function WelcomeScreen({ workspacePath }: WelcomeScreenProps): Re
     </div>
   )
 }
+
+export default React.memo(WelcomeScreenComponent)

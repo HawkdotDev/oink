@@ -25,7 +25,7 @@ interface SidebarSearchViewProps {
   onBackToExplorer?: () => void
 }
 
-export default function SidebarSearchView({
+function SidebarSearchViewComponent({
   workspacePath,
   activeFilePath,
   onFileSelect,
@@ -377,3 +377,5 @@ export default function SidebarSearchView({
     </div>
   )
 }
+
+export default React.memo(SidebarSearchViewComponent)
