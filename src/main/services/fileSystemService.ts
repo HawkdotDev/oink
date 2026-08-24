@@ -4,6 +4,81 @@ import * as fs from 'fs/promises'
 import { validatePath } from './pathValidator'
 
 /**
+ * Automatically migrates any legacy .notie directory to .oink and package.json to metadata.json
+ */
+async function migrateLegacyNotieFolder(dirPath: string): Promise<void> {
+  try {
+    const notieDir = join(dirPath, '.notie')
+    const oinkDir = join(dirPath, '.oink')
+
+    let notieExists = false
+    try {
+      const stat = await fs.stat(notieDir)
+      notieExists = stat.isDirectory()
+    } catch {
+      notieExists = false
+    }
+
+    if (!notieExists) return
+
+    let oinkExists = false
+    try {
+      const stat = await fs.stat(oinkDir)
+      oinkExists = stat.isDirectory()
+    } catch {
+      oinkExists = false
+    }
+
+    if (!oinkExists) {
+      // Direct rename .notie -> .oink
+      await fs.rename(notieDir, oinkDir)
+
+      // Inside .oink, if package.json exists and metadata.json doesn't, rename it
+      const oldMeta = join(oinkDir, 'package.json')
+      const newMeta = join(oinkDir, 'metadata.json')
+      try {
+        await fs.access(oldMeta)
+        try {
+          await fs.access(newMeta)
+        } catch {
+          await fs.rename(oldMeta, newMeta)
+        }
+      } catch {
+        // ignore
+      }
+    } else {
+      // Both exist: copy metadata file if target doesn't exist, then clean up .notie
+      const oldMeta1 = join(notieDir, 'metadata.json')
+      const oldMeta2 = join(notieDir, 'package.json')
+      const newMeta = join(oinkDir, 'metadata.json')
+
+      let sourceContent = ''
+      try {
+        sourceContent = await fs.readFile(oldMeta1, 'utf-8')
+      } catch {
+        try {
+          sourceContent = await fs.readFile(oldMeta2, 'utf-8')
+        } catch {
+          // ignore
+        }
+      }
+
+      if (sourceContent) {
+        try {
+          await fs.access(newMeta)
+        } catch {
+          await fs.writeFile(newMeta, sourceContent, 'utf-8')
+        }
+      }
+
+      await fs.rm(notieDir, { recursive: true, force: true })
+    }
+  } catch (err) {
+    console.error('Error during .notie -> .oink migration:', err)
+  }
+}
+
+/**
  * Registers all File System and Storage IPC handlers.
  */
 export function registerFileSystemHandlers(): void {
@@ -17,6 +92,7 @@ export function registerFileSystemHandlers(): void {
       return null
     }
     const dirPath = validatePath(result.filePaths[0])
+    await migrateLegacyNotieFolder(dirPath)
     return {
       path: dirPath,
       name: basename(dirPath)
@@ -25,6 +101,7 @@ export function registerFileSystemHandlers(): void {
 
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
     const validDir = validatePath(dirPath)
+    await migrateLegacyNotieFolder(validDir)
     try {
       const entries = await fs.readdir(validDir, { withFileTypes: true })
       return entries
@@ -121,7 +198,6 @@ export function registerFileSystemHandlers(): void {
     return validatePath(result.filePath)
   })
 
-  // Save image or media attachment into <workspace>/assets/ directory
   ipcMain.handle(
     'fs:saveAttachment',
     async (_, workspacePath: string, fileName: string, dataUrl: string) => {
@@ -130,16 +206,14 @@ export function registerFileSystemHandlers(): void {
       await fs.mkdir(assetsDir, { recursive: true })
 
       const ext = extname(fileName) || '.png'
-      const baseClean = basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
-      const finalFileName = `${Date.now()}_${baseClean}${ext}`
-      const targetFilePath = join(assetsDir, finalFileName)
+      const base = basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
+      const finalName = `${base}_${Date.now()}${ext}`
+      const fullPath = join(assetsDir, finalName)
 
-      // Decode base64 data URL
       const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, '')
-      const buffer = Buffer.from(base64Data, 'base64')
+      await fs.writeFile(fullPath, Buffer.from(base64Data, 'base64'))
 
-      await fs.writeFile(targetFilePath, buffer)
-      return `assets/${finalFileName}`
+      return `assets/${finalName}`
     }
   )
 }
