@@ -79,6 +79,131 @@ async function migrateLegacyNotieFolder(dirPath: string): Promise<void> {
 }
 
 /**
+ * Ensures the .oink directory and starter config.ts exist in the workspace.
+ */
+async function ensureOinkDirectoryAndConfig(dirPath: string): Promise<void> {
+  try {
+    const oinkDir = join(dirPath, '.oink')
+    await fs.mkdir(oinkDir, { recursive: true })
+
+    const configPath = join(oinkDir, 'config.ts')
+    try {
+      await fs.access(configPath)
+    } catch {
+      const template = `/**
+ * ==============================================================================
+ * Oink Workspace Configuration
+ * File: .oink/config.ts
+ * ==============================================================================
+ */
+
+export interface OinkWorkspaceConfig {
+  name?: string
+  description?: string
+  version?: string
+  theme?: {
+    mode?: 'dark' | 'light' | 'system'
+    accentColor?: string
+    background?: string
+    surface?: string
+    sidebarBg?: string
+    fontFamily?: string
+  }
+  editor?: {
+    fontFamily?: string
+    fontSize?: number
+    lineHeight?: string
+    letterSpacing?: string
+    paragraphSpacing?: string
+    fontWeight?: string
+    textAlign?: string
+    maxUndoHistory?: number
+    autoSave?: boolean
+    autoSaveIntervalMs?: number
+  }
+  markdown?: {
+    wikilinks?: boolean
+    strikethrough?: boolean
+    autoCloseBrackets?: boolean
+    tableOfContentsDepth?: number
+  }
+  excludePatterns?: string[]
+  plugins?: Record<string, boolean>
+  customCSS?: string
+  keybindings?: Record<string, string>
+  export?: {
+    defaultFormat?: 'markdown' | 'html' | 'text'
+    includeFrontmatter?: boolean
+    pageWidth?: string
+  }
+}
+
+export const config: OinkWorkspaceConfig = {
+  name: ${JSON.stringify(basename(dirPath))},
+  description: 'Personal knowledge base and block notes in Oink',
+  version: '1.0.0',
+  theme: {
+    mode: 'dark',
+    accentColor: '#3b82f6',
+    background: '#18181b',
+    surface: '#202023',
+    sidebarBg: '#131316',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  },
+  editor: {
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontSize: 16,
+    lineHeight: '1.65',
+    letterSpacing: '0px',
+    paragraphSpacing: '12px',
+    fontWeight: 'normal',
+    textAlign: 'left',
+    maxUndoHistory: 50,
+    autoSave: true,
+    autoSaveIntervalMs: 1000
+  },
+  markdown: {
+    wikilinks: true,
+    strikethrough: true,
+    autoCloseBrackets: true,
+    tableOfContentsDepth: 3
+  },
+  plugins: {
+    graphView: true,
+    outline: true,
+    stats: true,
+    terminal: true,
+    snippets: true,
+    mermaid: true,
+    mathjax: true
+  },
+  excludePatterns: [
+    'node_modules/**',
+    '.git/**',
+    '.oink/**',
+    '.notie/**',
+    'dist/**',
+    'build/**',
+    'out/**',
+    'coverage/**'
+  ],
+  export: {
+    defaultFormat: 'markdown',
+    includeFrontmatter: true,
+    pageWidth: '800px'
+  }
+}
+
+export default config
+`
+      await fs.writeFile(configPath, template, 'utf-8')
+    }
+  } catch (err) {
+    console.error('Failed to ensure .oink directory/config:', err)
+  }
+}
+
+/**
  * Registers all File System and Storage IPC handlers.
  */
 export function registerFileSystemHandlers(): void {
@@ -93,6 +218,7 @@ export function registerFileSystemHandlers(): void {
     }
     const dirPath = validatePath(result.filePaths[0])
     await migrateLegacyNotieFolder(dirPath)
+    await ensureOinkDirectoryAndConfig(dirPath)
     return {
       path: dirPath,
       name: basename(dirPath)
@@ -102,6 +228,7 @@ export function registerFileSystemHandlers(): void {
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
     const validDir = validatePath(dirPath)
     await migrateLegacyNotieFolder(validDir)
+    await ensureOinkDirectoryAndConfig(validDir)
     try {
       const entries = await fs.readdir(validDir, { withFileTypes: true })
       return entries

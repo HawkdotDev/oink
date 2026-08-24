@@ -6,6 +6,107 @@ export interface MarkdownMetadata {
   showFileName?: boolean
 }
 
+export interface OinkFileMetadata extends MarkdownMetadata {
+  title?: string
+  tags?: string[]
+  aliases?: string[]
+  isFavorite?: boolean
+  isPinned?: boolean
+  isLocked?: boolean
+  wordCount?: number
+  charCount?: number
+  readingTimeMinutes?: number
+  createdAt?: number
+  lastEditedTime?: number
+  customProps?: Record<string, unknown>
+}
+
+export interface OinkWorkspaceInfo {
+  name: string
+  id: string
+  icon?: string
+  description?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface OinkWorkspaceSession {
+  activeFilePath?: string | null
+  openFiles?: OpenFileInfo[]
+  recentFiles?: string[]
+  viewMode?: ViewMode
+  sidebarCollapsed?: boolean
+  sidebarWidth?: number
+  showRightSidebar?: boolean
+  rightSidebarWidth?: number
+  showTabs?: boolean
+  autoSaveEnabled?: boolean
+  widgetState?: WidgetState
+  widgetPositions?: Record<string, WidgetLayout>
+  widgetZIndexes?: Record<string, number>
+}
+
+export interface OinkWorkspaceConfig {
+  name?: string
+  description?: string
+  version?: string
+  theme?: {
+    mode?: 'dark' | 'light' | 'system'
+    accentColor?: string
+    background?: string
+    surface?: string
+    sidebarBg?: string
+    fontFamily?: string
+  }
+  editor?: {
+    fontFamily?: string
+    fontSize?: number
+    lineHeight?: string
+    letterSpacing?: string
+    paragraphSpacing?: string
+    fontWeight?: string
+    textAlign?: string
+    maxUndoHistory?: number
+    autoSave?: boolean
+    autoSaveIntervalMs?: number
+  }
+  markdown?: {
+    wikilinks?: boolean
+    strikethrough?: boolean
+    autoCloseBrackets?: boolean
+    tableOfContentsDepth?: number
+  }
+  excludePatterns?: string[]
+  plugins?: Record<string, boolean>
+  customCSS?: string
+  keybindings?: Record<string, string>
+  export?: {
+    defaultFormat?: 'markdown' | 'html' | 'text'
+    includeFrontmatter?: boolean
+    pageWidth?: string
+  }
+  hooks?: {
+    onWorkspaceOpen?: string
+    onFileSave?: string
+  }
+}
+
+export interface StoredWorkspaceMetadataFile {
+  version: number
+  appVersion?: string
+  updatedAt: number
+  workspace?: OinkWorkspaceInfo
+  session?: OinkWorkspaceSession
+  files?: Record<string, OinkFileMetadata>
+  tags?: Record<string, { color?: string; description?: string; count?: number }>
+  icons?: Record<string, string>
+  banners?: Record<string, string>
+  showCover?: Record<string, boolean | undefined>
+  showIcon?: Record<string, boolean | undefined>
+  showFileName?: Record<string, boolean | undefined>
+  customProps?: Record<string, Record<string, unknown>>
+}
+
 export interface ParsedDocument {
   metadata: MarkdownMetadata
   content: string

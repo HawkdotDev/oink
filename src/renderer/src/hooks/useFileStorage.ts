@@ -227,6 +227,16 @@ export function useFileStorage(
       metadataEngine.setShowIcon(rel, meta.showIcon)
       metadataEngine.setShowFileName(rel, meta.showFileName)
 
+      const words = contentToSave.trim().split(/\s+/).filter(Boolean).length
+      const chars = contentToSave.length
+      const readingTime = Math.max(1, Math.ceil(words / 200))
+      metadataEngine.setFileDetails(rel, {
+        wordCount: words,
+        charCount: chars,
+        readingTimeMinutes: readingTime,
+        lastEditedTime: Date.now()
+      })
+
       contentToSave = await metadataEngine.prepareForSaveAsync(contentToSave, rel, {
         icon: fileIcons[relKey],
         banner: fileBanners[relKey],

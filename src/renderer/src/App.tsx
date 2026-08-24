@@ -751,6 +751,23 @@ export default function App(): React.JSX.Element {
       widgetZIndexes,
       widgetPositions
     })
+
+    if (workspacePath) {
+      metadataEngine.setWorkspaceInfo({ name: workspaceName })
+      metadataEngine.setSessionState({
+        activeFilePath,
+        openFiles,
+        viewMode,
+        autoSaveEnabled,
+        sidebarCollapsed,
+        sidebarWidth,
+        showRightSidebar,
+        rightSidebarWidth,
+        widgetState,
+        widgetZIndexes,
+        widgetPositions
+      })
+    }
   }, [
     workspacePath,
     workspaceName,

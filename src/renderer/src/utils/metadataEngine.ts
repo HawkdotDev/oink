@@ -1,6 +1,13 @@
-import { MarkdownMetadata } from '../types'
+import {
+  MarkdownMetadata,
+  OinkFileMetadata,
+  OinkWorkspaceInfo,
+  OinkWorkspaceSession,
+  StoredWorkspaceMetadataFile
+} from '../types'
 import { parseMarkdownMetadata, serializeMarkdownMetadata, stripFrontmatter } from './metadataUtils'
 import { normalizePath } from './pathUtils'
+import { ensureWorkspaceConfigAsync } from './workspaceConfig'
 import { WorkerResultPayload } from '../workers/indexerWorker'
 
 export const OINK_METADATA_DIR = '.oink'
@@ -11,6 +18,10 @@ const LEGACY_METADATA_FILE = 'metadata.json'
 const LEGACY_PACKAGE_FILE = 'package.json'
 
 export interface WorkspaceMetadataStore {
+  workspace: OinkWorkspaceInfo
+  session: OinkWorkspaceSession
+  files: Record<string, OinkFileMetadata>
+  tags: Record<string, { color?: string; description?: string; count?: number }>
   icons: Record<string, string>
   banners: Record<string, string>
   showCover: Record<string, boolean | undefined>
@@ -19,21 +30,19 @@ export interface WorkspaceMetadataStore {
   customProps: Record<string, Record<string, unknown>>
 }
 
-export interface StoredWorkspaceMetadataFile {
-  version: number
-  updatedAt?: number
-  icons?: Record<string, string>
-  banners?: Record<string, string>
-  showCover?: Record<string, boolean | undefined>
-  showIcon?: Record<string, boolean | undefined>
-  showFileName?: Record<string, boolean | undefined>
-  customProps?: Record<string, Record<string, unknown>>
-}
-
 class AsyncOinkMetadataEngine {
   private worker: Worker | null = null
   private pendingCallbacks = new Map<string, (result: unknown) => void>()
   private store: WorkspaceMetadataStore = {
+    workspace: {
+      name: 'Workspace',
+      id: `ws_${Date.now()}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    },
+    session: {},
+    files: {},
+    tags: {},
     icons: {},
     banners: {},
     showCover: {},
@@ -74,12 +83,15 @@ class AsyncOinkMetadataEngine {
   }
 
   /**
-   * Load workspace metadata from .oink/metadata.json (with automatic fallback and migration from legacy .notie)
+   * Load rich workspace metadata from .oink/metadata.json (with automatic fallback and migration from legacy .notie)
    */
   public async loadWorkspaceMetadataAsync(workspacePath: string): Promise<WorkspaceMetadataStore> {
     const norm = normalizePath(workspacePath)
     if (!norm) return this.store
     this.currentWorkspacePath = norm
+
+    // Also ensure .oink/config.ts is initialized for the workspace
+    void ensureWorkspaceConfigAsync(norm, this.store.workspace.name)
 
     const primaryPath = `${norm}/${OINK_METADATA_DIR}/${OINK_METADATA_FILE}`
     const legacyPath1 = `${norm}/${LEGACY_NOTIE_DIR}/${LEGACY_METADATA_FILE}`
@@ -115,13 +127,44 @@ class AsyncOinkMetadataEngine {
     if (rawData) {
       try {
         const parsed = JSON.parse(rawData) as StoredWorkspaceMetadataFile
+        const filesMap: Record<string, OinkFileMetadata> = parsed.files || {}
+
+        // Hydrate backwards-compatible maps if files map is empty
+        const icons: Record<string, string> = { ...(parsed.icons || {}) }
+        const banners: Record<string, string> = { ...(parsed.banners || {}) }
+        const showCover: Record<string, boolean | undefined> = { ...(parsed.showCover || {}) }
+        const showIcon: Record<string, boolean | undefined> = { ...(parsed.showIcon || {}) }
+        const showFileName: Record<string, boolean | undefined> = { ...(parsed.showFileName || {}) }
+        const customProps: Record<string, Record<string, unknown>> = {
+          ...(parsed.customProps || {})
+        }
+
+        Object.entries(filesMap).forEach(([k, fileMeta]) => {
+          const key = k.toLowerCase()
+          if (fileMeta.icon) icons[key] = fileMeta.icon
+          if (fileMeta.banner) banners[key] = fileMeta.banner
+          if (fileMeta.showCover !== undefined) showCover[key] = fileMeta.showCover
+          if (fileMeta.showIcon !== undefined) showIcon[key] = fileMeta.showIcon
+          if (fileMeta.showFileName !== undefined) showFileName[key] = fileMeta.showFileName
+          if (fileMeta.customProps) customProps[key] = fileMeta.customProps
+        })
+
         this.store = {
-          icons: parsed.icons || {},
-          banners: parsed.banners || {},
-          showCover: parsed.showCover || {},
-          showIcon: parsed.showIcon || {},
-          showFileName: parsed.showFileName || {},
-          customProps: parsed.customProps || {}
+          workspace: parsed.workspace || {
+            name: 'Workspace',
+            id: `ws_${Date.now()}`,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          },
+          session: parsed.session || {},
+          files: filesMap,
+          tags: parsed.tags || {},
+          icons,
+          banners,
+          showCover,
+          showIcon,
+          showFileName,
+          customProps
         }
 
         // Automatically migrate legacy .notie data to .oink/metadata.json
@@ -144,9 +187,51 @@ class AsyncOinkMetadataEngine {
     if (!targetWs) return
 
     const filePath = `${targetWs}/${OINK_METADATA_DIR}/${OINK_METADATA_FILE}`
+
+    // Synchronize files map with flat store
+    const consolidatedFiles: Record<string, OinkFileMetadata> = { ...this.store.files }
+    const allKeys = new Set([
+      ...Object.keys(this.store.icons),
+      ...Object.keys(this.store.banners),
+      ...Object.keys(this.store.showCover),
+      ...Object.keys(this.store.showIcon),
+      ...Object.keys(this.store.showFileName),
+      ...Object.keys(this.store.customProps),
+      ...Object.keys(consolidatedFiles)
+    ])
+
+    allKeys.forEach((key) => {
+      consolidatedFiles[key] = {
+        ...(consolidatedFiles[key] || {}),
+        icon: this.store.icons[key] || consolidatedFiles[key]?.icon,
+        banner: this.store.banners[key] || consolidatedFiles[key]?.banner,
+        showCover:
+          this.store.showCover[key] !== undefined
+            ? this.store.showCover[key]
+            : consolidatedFiles[key]?.showCover,
+        showIcon:
+          this.store.showIcon[key] !== undefined
+            ? this.store.showIcon[key]
+            : consolidatedFiles[key]?.showIcon,
+        showFileName:
+          this.store.showFileName[key] !== undefined
+            ? this.store.showFileName[key]
+            : consolidatedFiles[key]?.showFileName,
+        customProps: this.store.customProps[key] || consolidatedFiles[key]?.customProps
+      }
+    })
+
     const payload: StoredWorkspaceMetadataFile = {
       version: 1,
+      appVersion: '0.1.0',
       updatedAt: Date.now(),
+      workspace: {
+        ...this.store.workspace,
+        updatedAt: Date.now()
+      },
+      session: this.store.session,
+      files: consolidatedFiles,
+      tags: this.store.tags,
       icons: this.store.icons,
       banners: this.store.banners,
       showCover: this.store.showCover,
@@ -171,7 +256,7 @@ class AsyncOinkMetadataEngine {
     }
     this.saveDebounceTimer = setTimeout(() => {
       void this.saveWorkspaceMetadataAsync(workspacePath)
-    }, 500)
+    }, 400)
   }
 
   /**
@@ -341,6 +426,70 @@ class AsyncOinkMetadataEngine {
     delete this.store.showIcon[key]
     delete this.store.showFileName[key]
     this.scheduleSave()
+  }
+
+  public setFileDetails(relPath: string, details: Partial<OinkFileMetadata>): void {
+    const key = relPath.toLowerCase()
+    this.store.files[key] = {
+      ...(this.store.files[key] || {}),
+      ...details
+    }
+    if (details.icon !== undefined) this.store.icons[key] = details.icon
+    if (details.banner !== undefined) this.store.banners[key] = details.banner
+    if (details.showCover !== undefined) this.store.showCover[key] = details.showCover
+    if (details.showIcon !== undefined) this.store.showIcon[key] = details.showIcon
+    if (details.showFileName !== undefined) this.store.showFileName[key] = details.showFileName
+    this.scheduleSave()
+  }
+
+  public getFileDetails(relPath: string): OinkFileMetadata {
+    const key = relPath.toLowerCase()
+    return (
+      this.store.files[key] || {
+        icon: this.store.icons[key],
+        banner: this.store.banners[key],
+        showCover: this.store.showCover[key],
+        showIcon: this.store.showIcon[key],
+        showFileName: this.store.showFileName[key]
+      }
+    )
+  }
+
+  public setSessionState(session: Partial<OinkWorkspaceSession>): void {
+    this.store.session = {
+      ...this.store.session,
+      ...session
+    }
+    this.scheduleSave()
+  }
+
+  public getSessionState(): OinkWorkspaceSession {
+    return this.store.session
+  }
+
+  public setWorkspaceInfo(info: Partial<OinkWorkspaceInfo>): void {
+    this.store.workspace = {
+      ...this.store.workspace,
+      ...info,
+      updatedAt: Date.now()
+    }
+    this.scheduleSave()
+  }
+
+  public getWorkspaceInfo(): OinkWorkspaceInfo {
+    return this.store.workspace
+  }
+
+  public setTag(tagName: string, meta: { color?: string; description?: string }): void {
+    this.store.tags[tagName] = {
+      ...(this.store.tags[tagName] || {}),
+      ...meta
+    }
+    this.scheduleSave()
+  }
+
+  public getTags(): Record<string, { color?: string; description?: string; count?: number }> {
+    return this.store.tags
   }
 
   public getFileMetadata(relPath: string): MarkdownMetadata {
