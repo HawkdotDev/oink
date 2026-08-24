@@ -4,6 +4,53 @@ import { OpenFileInfo } from '../../types'
 import { ProfessionalFileIcon } from '../../utils/fileIconUtils'
 import { getPathKey, normalizePath } from '../../utils/pathUtils'
 
+interface TabItemProps {
+  file: OpenFileInfo
+  isActive: boolean
+  isUnsaved: boolean
+  customIcon?: string
+  onTabSelect: (filePath: string) => void
+  onTabClose: (filePath: string) => void
+}
+
+const TabItem = React.memo(function TabItem({
+  file,
+  isActive,
+  isUnsaved,
+  customIcon,
+  onTabSelect,
+  onTabClose
+}: TabItemProps): React.JSX.Element {
+  return (
+    <div
+      className={`header-tab ${isActive ? 'active' : ''} ${isUnsaved ? 'unsaved' : ''}`}
+      onClick={(): void => onTabSelect(file.path)}
+      title={file.path}
+    >
+      <span className="header-tab-icon">
+        {customIcon ? (
+          <span className="text-[12px]">{customIcon}</span>
+        ) : (
+          <ProfessionalFileIcon fileName={file.name} className="scale-[0.9]" />
+        )}
+      </span>
+      <span className="header-tab-name">{file.name}</span>
+      {isUnsaved ? <span className="header-tab-unsaved-dot" title="Unsaved changes" /> : null}
+      <button
+        type="button"
+        className="header-tab-close"
+        onClick={(e): void => {
+          e.stopPropagation()
+          onTabClose(file.path)
+        }}
+        title="Close tab"
+      >
+        <X size={12} strokeWidth={1.5} />
+      </button>
+    </div>
+  )
+})
+
 interface TabBarProps {
   openFiles: OpenFileInfo[]
   activeFilePath: string | null
@@ -44,33 +91,15 @@ function TabBarComponent({
         const customIcon = fileIcons ? fileIcons[rel] : undefined
 
         return (
-          <div
+          <TabItem
             key={file.path}
-            className={`header-tab ${isActive ? 'active' : ''} ${isUnsaved ? 'unsaved' : ''}`}
-            onClick={(): void => onTabSelect(file.path)}
-            title={file.path}
-          >
-            <span className="header-tab-icon">
-              {customIcon ? (
-                <span className="text-[12px]">{customIcon}</span>
-              ) : (
-                <ProfessionalFileIcon fileName={file.name} className="scale-[0.9]" />
-              )}
-            </span>
-            <span className="header-tab-name">{file.name}</span>
-            {isUnsaved ? <span className="header-tab-unsaved-dot" title="Unsaved changes" /> : null}
-            <button
-              type="button"
-              className="header-tab-close"
-              onClick={(e): void => {
-                e.stopPropagation()
-                onTabClose(file.path)
-              }}
-              title="Close tab"
-            >
-              <X size={12} strokeWidth={1.5} />
-            </button>
-          </div>
+            file={file}
+            isActive={isActive}
+            isUnsaved={isUnsaved}
+            customIcon={customIcon}
+            onTabSelect={onTabSelect}
+            onTabClose={onTabClose}
+          />
         )
       })}
       {onCreateFileAtRoot && (

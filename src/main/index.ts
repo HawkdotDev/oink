@@ -9,6 +9,9 @@ import { registerGraphHandlers } from './services/graphService'
 app.commandLine.appendSwitch('enable-gpu-rasterization')
 app.commandLine.appendSwitch('enable-zero-copy')
 app.commandLine.appendSwitch('ignore-gpu-blocklist')
+app.commandLine.appendSwitch('disable-background-timer-throttling')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+app.commandLine.appendSwitch('enable-fast-unload')
 
 // Initialization and lifecycle orchestration
 app.whenReady().then(() => {

@@ -54,19 +54,24 @@ export function useIndexerWorker(activeFileContent?: string): {
     if (!workerRef.current) return
     const content = activeFileContent || ''
 
-    const statsTaskId = `stats_${Date.now()}`
-    workerRef.current.postMessage({
-      id: statsTaskId,
-      type: 'CALCULATE_STATS',
-      content
-    })
+    const timer = setTimeout(() => {
+      if (!workerRef.current) return
+      const statsTaskId = `stats_${Date.now()}`
+      workerRef.current.postMessage({
+        id: statsTaskId,
+        type: 'CALCULATE_STATS',
+        content
+      })
 
-    const headingsTaskId = `headings_${Date.now()}`
-    workerRef.current.postMessage({
-      id: headingsTaskId,
-      type: 'PARSE_HEADINGS',
-      content
-    })
+      const headingsTaskId = `headings_${Date.now()}`
+      workerRef.current.postMessage({
+        id: headingsTaskId,
+        type: 'PARSE_HEADINGS',
+        content
+      })
+    }, 60)
+
+    return (): void => clearTimeout(timer)
   }, [activeFileContent])
 
   const extractGraphLinks = useCallback(
