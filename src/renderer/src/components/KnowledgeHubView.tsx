@@ -34,10 +34,26 @@ interface KnowledgeHubViewProps {
 
 // Sample fallback authors for rich visual presentation matching reference design
 const SAMPLE_AUTHORS = [
-  { name: 'kevin@mail.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=faces' },
-  { name: 'antonwe@gmail.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=faces' },
-  { name: 'sarah@company.io', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=faces' },
-  { name: 'david.dev@oink.app', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=faces' }
+  {
+    name: 'kevin@mail.com',
+    avatar:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=faces'
+  },
+  {
+    name: 'antonwe@gmail.com',
+    avatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=faces'
+  },
+  {
+    name: 'sarah@company.io',
+    avatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&crop=faces'
+  },
+  {
+    name: 'david.dev@oink.app',
+    avatar:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=faces'
+  }
 ]
 
 function KnowledgeHubView({
@@ -46,7 +62,9 @@ function KnowledgeHubView({
   onFileSelect,
   fileIcons = {}
 }: KnowledgeHubViewProps): React.JSX.Element {
-  const [currentDir, setCurrentDir] = useState<string>(() => workspacePath || '')
+  const [selectedSubDir, setSelectedSubDir] = useState<string | null>(null)
+  const currentDir = selectedSubDir ?? workspacePath ?? ''
+
   const [items, setItems] = useState<KnowledgeHubItem[]>([])
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [newFolderName, setNewFolderName] = useState<string>('')
@@ -54,60 +72,60 @@ function KnowledgeHubView({
   const [showNewFileModal, setShowNewFileModal] = useState<boolean>(false)
   const [newFileName, setNewFileName] = useState<string>('')
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false)
-
-  // Sync currentDir if workspace changes
-  useEffect(() => {
-    if (workspacePath) {
-      setCurrentDir(workspacePath)
-    }
-  }, [workspacePath])
+  const [refreshTick, setRefreshTick] = useState<number>(0)
 
   // Load directory contents
-  const loadDirectoryItems = useCallback(async (dirPath: string): Promise<void> => {
-    if (!dirPath) return
-    try {
-      if (window.api?.fs?.readDirectory) {
-        const rawEntries = await window.api.fs.readDirectory(dirPath)
-        const parsedItems: KnowledgeHubItem[] = await Promise.all(
-          rawEntries
-            .filter((entry) => !entry.name.startsWith('.'))
-            .map(async (entry, index) => {
-              let childCount = 0
-              if (entry.isDir) {
-                try {
-                  const children = await window.api.fs.readDirectory(entry.path)
-                  childCount = children.filter((c) => !c.name.startsWith('.')).length
-                } catch {
-                  childCount = 0
-                }
-              }
-              const authorData = SAMPLE_AUTHORS[index % SAMPLE_AUTHORS.length]
-              return {
-                name: entry.name,
-                path: normalizePath(entry.path),
-                isDir: entry.isDir,
-                fileCount: entry.isDir ? childCount : undefined,
-                author: authorData.name,
-                authorAvatar: authorData.avatar
-              }
-            })
-        )
-        setItems(parsedItems)
-      }
-    } catch (err) {
-      console.error('Failed to load directory items:', err)
-    }
-  }, [])
-
   useEffect(() => {
-    if (currentDir) {
-      void loadDirectoryItems(currentDir)
+    let isMounted = true
+    if (!currentDir) return
+
+    const fetchDirectory = async (): Promise<void> => {
+      try {
+        if (window.api?.fs?.readDirectory) {
+          const rawEntries = await window.api.fs.readDirectory(currentDir)
+          const parsedItems: KnowledgeHubItem[] = await Promise.all(
+            rawEntries
+              .filter((entry) => !entry.name.startsWith('.'))
+              .map(async (entry, index) => {
+                let childCount = 0
+                if (entry.isDir) {
+                  try {
+                    const children = await window.api.fs.readDirectory(entry.path)
+                    childCount = children.filter((c) => !c.name.startsWith('.')).length
+                  } catch {
+                    childCount = 0
+                  }
+                }
+                const authorData = SAMPLE_AUTHORS[index % SAMPLE_AUTHORS.length]
+                return {
+                  name: entry.name,
+                  path: normalizePath(entry.path),
+                  isDir: entry.isDir,
+                  fileCount: entry.isDir ? childCount : undefined,
+                  author: authorData.name,
+                  authorAvatar: authorData.avatar
+                }
+              })
+          )
+          if (isMounted) {
+            setItems(parsedItems)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load directory items:', err)
+      }
     }
-  }, [currentDir, loadDirectoryItems])
+
+    void fetchDirectory()
+
+    return (): void => {
+      isMounted = false
+    }
+  }, [currentDir, refreshTick])
 
   // Folder navigation
   const handleNavigateFolder = useCallback((folderPath: string): void => {
-    setCurrentDir(normalizePath(folderPath))
+    setSelectedSubDir(normalizePath(folderPath))
   }, [])
 
   const handleNavigateUp = useCallback((): void => {
@@ -116,48 +134,58 @@ function KnowledgeHubView({
       0,
       Math.max(currentDir.lastIndexOf('/'), currentDir.lastIndexOf('\\'))
     )
-    if (parent) {
-      setCurrentDir(normalizePath(parent))
+    if (parent && parent.length >= workspacePath.length) {
+      setSelectedSubDir(normalizePath(parent))
+    } else {
+      setSelectedSubDir(null)
     }
   }, [currentDir, workspacePath])
 
   // Split into folders and files
-  const folders = useMemo(() => {
-    return items
-      .filter((i) => i.isDir)
-      .filter((i) => (searchQuery ? i.name.toLowerCase().includes(searchQuery.toLowerCase()) : true))
-  }, [items, searchQuery])
+  const folders = useMemo(() => items.filter((item) => item.isDir), [items])
+  const files = useMemo(() => items.filter((item) => !item.isDir), [items])
 
-  const files = useMemo(() => {
-    return items
-      .filter((i) => !i.isDir)
-      .filter((i) => (searchQuery ? i.name.toLowerCase().includes(searchQuery.toLowerCase()) : true))
-  }, [items, searchQuery])
+  // Filtered lists
+  const filteredFolders = useMemo(() => {
+    if (!searchQuery.trim()) return folders
+    const q = searchQuery.toLowerCase()
+    return folders.filter((f) => f.name.toLowerCase().includes(q))
+  }, [folders, searchQuery])
 
-  // Breadcrumbs parts
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) return files
+    const q = searchQuery.toLowerCase()
+    return files.filter(
+      (f) => f.name.toLowerCase().includes(q) || (f.author && f.author.toLowerCase().includes(q))
+    )
+  }, [files, searchQuery])
+
+  // Breadcrumbs calculation
   const breadcrumbs = useMemo(() => {
     if (!workspacePath) return []
     const normWs = normalizePath(workspacePath)
     const normCur = normalizePath(currentDir)
-    if (normCur === normWs) {
-      return [{ name: workspaceName || 'General Knowledge', path: normWs }]
+    if (!normCur.startsWith(normWs)) {
+      return [{ name: workspaceName || 'Workspace', path: normWs }]
     }
-    const rel = normCur.replace(normWs, '').replace(/^[\\/]/, '')
-    const parts = rel.split(/[\\/]/).filter(Boolean)
-    const trail = [{ name: workspaceName || 'General Knowledge', path: normWs }]
+    const rel = normCur.slice(normWs.length).replace(/^[/\\]/, '')
+    if (!rel) {
+      return [{ name: workspaceName || 'Workspace', path: normWs }]
+    }
+    const segments = rel.split('/').filter(Boolean)
+    const crumbs = [{ name: workspaceName || 'Workspace', path: normWs }]
     let acc = normWs
-    parts.forEach((p) => {
-      acc = `${acc}/${p}`
-      trail.push({ name: p, path: acc })
-    })
-    return trail
-  }, [currentDir, workspacePath, workspaceName])
+    for (const seg of segments) {
+      acc = `${acc}/${seg}`
+      crumbs.push({ name: seg, path: acc })
+    }
+    return crumbs
+  }, [workspacePath, workspaceName, currentDir])
 
-  // Current folder display name
-  const currentFolderName = useMemo(() => {
-    if (breadcrumbs.length === 0) return workspaceName || 'General Knowledge'
-    return breadcrumbs[breadcrumbs.length - 1].name
-  }, [breadcrumbs, workspaceName])
+  const currentFolderName =
+    breadcrumbs.length > 0
+      ? breadcrumbs[breadcrumbs.length - 1].name
+      : workspaceName || 'General Knowledge'
 
   // Handle create folder
   const handleCreateFolder = useCallback(async (): Promise<void> => {
@@ -167,12 +195,12 @@ function KnowledgeHubView({
         await window.api.fs.createFolder(currentDir, newFolderName.trim())
         setNewFolderName('')
         setShowNewFolderModal(false)
-        await loadDirectoryItems(currentDir)
+        setRefreshTick((t) => t + 1)
       }
     } catch (err) {
       alert(`Error creating folder: ${err}`)
     }
-  }, [newFolderName, currentDir, loadDirectoryItems])
+  }, [newFolderName, currentDir])
 
   // Handle create file
   const handleCreateFile = useCallback(async (): Promise<void> => {
@@ -185,13 +213,13 @@ function KnowledgeHubView({
         const newPath = await window.api.fs.createFile(currentDir, name)
         setNewFileName('')
         setShowNewFileModal(false)
-        await loadDirectoryItems(currentDir)
+        setRefreshTick((t) => t + 1)
         onFileSelect(normalizePath(newPath))
       }
     } catch (err) {
       alert(`Error creating note: ${err}`)
     }
-  }, [newFileName, currentDir, loadDirectoryItems, onFileSelect])
+  }, [newFileName, currentDir, onFileSelect])
 
   return (
     <div className="knowledge-hub-container select-none">
@@ -234,7 +262,7 @@ function KnowledgeHubView({
                     type="button"
                     className={`hub-popover-item ${idx === breadcrumbs.length - 1 ? 'active' : ''}`}
                     onClick={(): void => {
-                      setCurrentDir(crumb.path)
+                      handleNavigateFolder(crumb.path)
                       setDropdownOpen(false)
                     }}
                   >
@@ -291,16 +319,16 @@ function KnowledgeHubView({
         <div className="hub-section mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="hub-section-heading">Folders</h2>
-            {folders.length > 0 && (
+            {filteredFolders.length > 0 && (
               <span className="text-xs text-zinc-500 font-medium">
-                {folders.length} {folders.length === 1 ? 'Folder' : 'Folders'}
+                {filteredFolders.length} {filteredFolders.length === 1 ? 'Folder' : 'Folders'}
               </span>
             )}
           </div>
 
-          {folders.length > 0 ? (
+          {filteredFolders.length > 0 ? (
             <div className="hub-folder-grid">
-              {folders.map((folder) => {
+              {filteredFolders.map((folder) => {
                 const count = folder.fileCount ?? 0
                 return (
                   <div
@@ -375,14 +403,14 @@ function KnowledgeHubView({
         <div className="hub-section">
           <div className="flex items-center justify-between mb-3">
             <h2 className="hub-section-heading">Files</h2>
-            {files.length > 0 && (
+            {filteredFiles.length > 0 && (
               <span className="text-xs text-zinc-500 font-medium">
-                {files.length} {files.length === 1 ? 'Document' : 'Documents'}
+                {filteredFiles.length} {filteredFiles.length === 1 ? 'Document' : 'Documents'}
               </span>
             )}
           </div>
 
-          {files.length > 0 ? (
+          {filteredFiles.length > 0 ? (
             <div className="hub-files-table-wrapper">
               <table className="hub-files-table">
                 <thead>
@@ -393,7 +421,7 @@ function KnowledgeHubView({
                   </tr>
                 </thead>
                 <tbody>
-                  {files.map((file) => {
+                  {filteredFiles.map((file) => {
                     const rel = getRelativePath(file.path, workspacePath).toLowerCase()
                     const customIcon = fileIcons[rel]
 
@@ -410,7 +438,10 @@ function KnowledgeHubView({
                               {customIcon ? (
                                 <span className="text-[13px]">{customIcon}</span>
                               ) : (
-                                <ProfessionalFileIcon fileName={file.name} className="scale-[0.95]" />
+                                <ProfessionalFileIcon
+                                  fileName={file.name}
+                                  className="scale-[0.95]"
+                                />
                               )}
                             </span>
                             <span className="hub-file-name truncate group-hover:text-blue-400 transition-colors">

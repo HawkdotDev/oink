@@ -5,7 +5,6 @@ import { registerFileSystemHandlers } from './services/fileSystemService'
 import { registerWorkspaceWatcherHandlers } from './services/workspaceWatcher'
 import { registerGraphHandlers } from './services/graphService'
 
-
 // Initialization and lifecycle orchestration
 app.whenReady().then(() => {
   // Force dark mode for native titlebar, menus, and system dialogs

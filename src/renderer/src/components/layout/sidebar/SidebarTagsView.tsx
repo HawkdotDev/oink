@@ -21,10 +21,7 @@ interface SidebarTagsViewProps {
   selectedTag?: string | null
 }
 
-function SidebarTagsView({
-  onSelectTag,
-  selectedTag
-}: SidebarTagsViewProps): React.JSX.Element {
+function SidebarTagsView({ onSelectTag, selectedTag }: SidebarTagsViewProps): React.JSX.Element {
   return (
     <div className="sidebar-tags-container px-3 py-2">
       <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-1">

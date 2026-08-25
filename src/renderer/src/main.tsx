@@ -18,35 +18,91 @@ if (!window.api) {
       { path: '/workspace/General Knowledge/Onboarding', name: 'Onboarding', isDir: true },
       { path: '/workspace/General Knowledge/Integrations', name: 'Integrations', isDir: true },
       { path: '/workspace/General Knowledge/Documents', name: 'Documents', isDir: true },
-      { path: '/workspace/General Knowledge/Onboarding-Guide.md', name: 'Onboarding-Guide.md', isDir: false },
-      { path: '/workspace/General Knowledge/Product-Roadmap.md', name: 'Product-Roadmap.md', isDir: false },
-      { path: '/workspace/General Knowledge/Tech-Architecture.md', name: 'Tech-Architecture.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Onboarding-Guide.md',
+        name: 'Onboarding-Guide.md',
+        isDir: false
+      },
+      {
+        path: '/workspace/General Knowledge/Product-Roadmap.md',
+        name: 'Product-Roadmap.md',
+        isDir: false
+      },
+      {
+        path: '/workspace/General Knowledge/Tech-Architecture.md',
+        name: 'Tech-Architecture.md',
+        isDir: false
+      }
     ],
     '/workspace/General Knowledge/Onboarding': [
-      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1', name: 'Subfolder 1', isDir: true },
-      { path: '/workspace/General Knowledge/Onboarding/Subfolder 2', name: 'Subfolder 2', isDir: true },
-      { path: '/workspace/General Knowledge/Onboarding/Welcome-Checklist.md', name: 'Welcome-Checklist.md', isDir: false },
-      { path: '/workspace/General Knowledge/Onboarding/Company-Handbook.md', name: 'Company-Handbook.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Onboarding/Subfolder 1',
+        name: 'Subfolder 1',
+        isDir: true
+      },
+      {
+        path: '/workspace/General Knowledge/Onboarding/Subfolder 2',
+        name: 'Subfolder 2',
+        isDir: true
+      },
+      {
+        path: '/workspace/General Knowledge/Onboarding/Welcome-Checklist.md',
+        name: 'Welcome-Checklist.md',
+        isDir: false
+      },
+      {
+        path: '/workspace/General Knowledge/Onboarding/Company-Handbook.md',
+        name: 'Company-Handbook.md',
+        isDir: false
+      }
     ],
     '/workspace/General Knowledge/Onboarding/Subfolder 1': [
-      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Getting-Started.md', name: 'Getting-Started.md', isDir: false },
-      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Security-Setup.md', name: 'Security-Setup.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Getting-Started.md',
+        name: 'Getting-Started.md',
+        isDir: false
+      },
+      {
+        path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Security-Setup.md',
+        name: 'Security-Setup.md',
+        isDir: false
+      }
     ],
     '/workspace/General Knowledge/Onboarding/Subfolder 2': [
-      { path: '/workspace/General Knowledge/Onboarding/Subfolder 2/API-Keys.md', name: 'API-Keys.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Onboarding/Subfolder 2/API-Keys.md',
+        name: 'API-Keys.md',
+        isDir: false
+      }
     ],
     '/workspace/General Knowledge/Integrations': [
-      { path: '/workspace/General Knowledge/Integrations/Slack-Webhook.md', name: 'Slack-Webhook.md', isDir: false },
-      { path: '/workspace/General Knowledge/Integrations/Github-Actions.md', name: 'Github-Actions.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Integrations/Slack-Webhook.md',
+        name: 'Slack-Webhook.md',
+        isDir: false
+      },
+      {
+        path: '/workspace/General Knowledge/Integrations/Github-Actions.md',
+        name: 'Github-Actions.md',
+        isDir: false
+      }
     ],
     '/workspace/General Knowledge/Documents': [
-      { path: '/workspace/General Knowledge/Documents/RFC-001.md', name: 'RFC-001.md', isDir: false }
+      {
+        path: '/workspace/General Knowledge/Documents/RFC-001.md',
+        name: 'RFC-001.md',
+        isDir: false
+      }
     ],
     '/workspace/Onboarding Design': [
       { path: '/workspace/Onboarding Design/Figma-Specs.md', name: 'Figma-Specs.md', isDir: false }
     ],
     '/workspace/Team Interviews': [
-      { path: '/workspace/Team Interviews/Candidate-Evaluation.md', name: 'Candidate-Evaluation.md', isDir: false }
+      {
+        path: '/workspace/Team Interviews/Candidate-Evaluation.md',
+        name: 'Candidate-Evaluation.md',
+        isDir: false
+      }
     ]
   }
 
