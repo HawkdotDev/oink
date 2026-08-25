@@ -1,7 +1,6 @@
 import React from 'react'
 import {
   Home,
-  Layers,
   Network,
   Blocks,
   Settings,
@@ -32,6 +31,14 @@ function ActivityRail({
   sidebarCollapsed = false,
   onToggleSidebar
 }: ActivityRailProps): React.JSX.Element {
+  const handleToggleOrSelectSidebar = (): void => {
+    if (onToggleSidebar) {
+      onToggleSidebar()
+    } else {
+      onSelectTab('explorer')
+    }
+  }
+
   return (
     <nav className="activity-rail select-none flex flex-col items-center justify-between py-3">
       {/* Top Group: Brand Icon & Core Views */}
@@ -60,14 +67,18 @@ function ActivityRail({
             <Home size={15} strokeWidth={1.8} />
           </button>
 
-          {/* Database / Knowledge Base Explorer */}
+          {/* Open / Close Sidebar Button (Replacing Knowledge Base button) */}
           <button
             type="button"
-            className={`rail-nav-item ${activeTab === 'explorer' ? 'active' : ''}`}
-            onClick={(): void => onSelectTab('explorer')}
-            title="Folders & Documents"
+            className={`rail-nav-item ${!sidebarCollapsed && activeTab === 'explorer' ? 'active' : ''}`}
+            onClick={handleToggleOrSelectSidebar}
+            title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
           >
-            <Layers size={15} strokeWidth={1.8} />
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={15} strokeWidth={1.8} />
+            ) : (
+              <PanelLeftClose size={15} strokeWidth={1.8} />
+            )}
           </button>
 
           {/* Sync / Switcher */}
@@ -108,23 +119,8 @@ function ActivityRail({
         </div>
       </div>
 
-      {/* Bottom Group: Sidebar Toggle & Settings */}
+      {/* Bottom Group: Settings */}
       <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
-        {onToggleSidebar && (
-          <button
-            type="button"
-            className="rail-nav-item"
-            onClick={onToggleSidebar}
-            title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
-          >
-            {sidebarCollapsed ? (
-              <PanelLeftOpen size={15} strokeWidth={1.8} />
-            ) : (
-              <PanelLeftClose size={15} strokeWidth={1.8} />
-            )}
-          </button>
-        )}
-
         <button
           type="button"
           className="rail-nav-item"
