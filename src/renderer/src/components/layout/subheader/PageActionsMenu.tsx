@@ -28,8 +28,6 @@ export interface PageActionsMenuProps {
   onChangeFontWeight?: (val: string) => void
   editorTextAlign?: string
   onChangeTextAlign?: (val: string) => void
-  isFullScreen?: boolean
-  onToggleFullScreen?: () => void
   isPageLocked?: boolean
   onToggleLockPage?: () => void
   onDuplicateFile?: () => void
@@ -41,6 +39,8 @@ export interface PageActionsMenuProps {
   onExportText?: () => void
   onExportMarkdown?: () => void
   onCopyLink?: () => void
+  autoSaveEnabled?: boolean
+  onToggleAutoSave?: () => void
 
   // Customize page options
   statsConfig?: StatusStatsConfig
@@ -72,8 +72,6 @@ function PageActionsMenu({
   onChangeFontWeight,
   editorTextAlign = 'left',
   onChangeTextAlign,
-  isFullScreen = false,
-  onToggleFullScreen,
   isPageLocked = false,
   onToggleLockPage,
   onDuplicateFile,
@@ -85,6 +83,8 @@ function PageActionsMenu({
   onExportText,
   onExportMarkdown,
   onCopyLink,
+  autoSaveEnabled = true,
+  onToggleAutoSave,
   statsConfig,
   onToggleStat,
   showCover = true,
@@ -251,8 +251,8 @@ function PageActionsMenu({
               onCopyPageContent={handleCopyPageContent}
               onDuplicateFile={onDuplicateFile}
               onDeleteFile={onDeleteFile}
-              isFullScreen={isFullScreen}
-              onToggleFullScreen={onToggleFullScreen}
+              autoSaveEnabled={autoSaveEnabled}
+              onToggleAutoSave={onToggleAutoSave}
               isPageLocked={isPageLocked}
               onToggleLockPage={onToggleLockPage}
               onOpenAI={onOpenAI}

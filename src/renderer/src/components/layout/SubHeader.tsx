@@ -1,5 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { X, PanelLeftClose, PanelLeftOpen, Menu, Route, Files, EyeOff } from 'lucide-react'
+import {
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu,
+  Route,
+  Files,
+  EyeOff,
+  Maximize2,
+  Minimize2
+} from 'lucide-react'
 import ShareMenu from './subheader/ShareMenu'
 import PageActionsMenu from './subheader/PageActionsMenu'
 import { StatusStatsConfig, OpenFileInfo } from '../../types'
@@ -355,17 +365,21 @@ function SubHeader({
           </>
         )}
 
-        {/* Autosave Toggle Switch */}
-        <div
-          className="header-toggle-group cursor-pointer"
-          onClick={onToggleAutoSave}
-          title={`Autosave is ${autoSaveEnabled ? 'Enabled' : 'Disabled'}`}
-        >
-          <span>Autosave</span>
-          <div className={`toggle-switch ${autoSaveEnabled ? 'active' : ''}`}>
-            <div className="toggle-knob" />
-          </div>
-        </div>
+        {/* Selectable Full Screen Icon Button */}
+        {onToggleFullScreen && (
+          <button
+            type="button"
+            className={`action-pill-btn fullscreen-btn ${isFullScreen ? 'active' : ''}`}
+            onClick={onToggleFullScreen}
+            title={isFullScreen ? 'Exit Full Screen (Esc / F11)' : 'Enter Full Screen (F11)'}
+          >
+            {isFullScreen ? (
+              <Minimize2 size={13} strokeWidth={1.75} className="text-zinc-200" />
+            ) : (
+              <Maximize2 size={13} strokeWidth={1.75} className="text-zinc-300" />
+            )}
+          </button>
+        )}
 
         {/* Share & Collaboration Dropdown */}
         <ShareMenu activeFilePath={activeFilePath} onCopyLink={onCopyLink} />
@@ -389,8 +403,6 @@ function SubHeader({
           onChangeFontWeight={onChangeFontWeight}
           editorTextAlign={editorTextAlign}
           onChangeTextAlign={onChangeTextAlign}
-          isFullScreen={isFullScreen}
-          onToggleFullScreen={onToggleFullScreen}
           isPageLocked={isPageLocked}
           onToggleLockPage={onToggleLockPage}
           onDuplicateFile={onDuplicateFile}
@@ -404,6 +416,8 @@ function SubHeader({
           onCopyLink={onCopyLink}
           statsConfig={statsConfig}
           onToggleStat={onToggleStat}
+          autoSaveEnabled={autoSaveEnabled}
+          onToggleAutoSave={onToggleAutoSave}
           showCover={showCover}
           showIcon={showIcon}
           showFileName={showFileName}

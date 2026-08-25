@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Minus, Square, X, Bell, Settings, FileText, Network, Blocks } from 'lucide-react'
+import { Minus, Square, X, Bell, Settings, FileText, Network, Blocks, Home } from 'lucide-react'
 import oinkLogo from '../../assets/logo.png'
 import { ViewMode, WidgetState } from '../../types'
 import { APP_VERSION } from '../../utils/version'
@@ -14,6 +14,7 @@ interface TopHeaderProps {
   sidebarView?: 'explorer' | 'search' | 'plugins'
   sidebarCollapsed?: boolean
   onTogglePluginsView?: () => void
+  onSwitchToHome?: () => void
   onSwitchToFiles?: () => void
   enabledPluginsCount?: number
   showTabs?: boolean
@@ -44,6 +45,7 @@ function TopHeader({
   sidebarView = 'explorer',
   sidebarCollapsed = false,
   onTogglePluginsView,
+  onSwitchToHome,
   onSwitchToFiles,
   enabledPluginsCount = 0,
   showTabs = true,
@@ -134,9 +136,27 @@ function TopHeader({
 
         {/* Floating Segmented Navigation Cluster */}
         <div className="header-segmented-cluster">
-          {/* 1. File Editor Tab */}
+          {/* 1. Home Tab */}
           <button
-            className={`action-pill-btn ${viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed) ? 'active' : ''}`}
+            className={`action-pill-btn ${viewMode === 'editor' && !activeFilePath ? 'active' : ''}`}
+            onClick={(): void => {
+              if (onSwitchToHome) onSwitchToHome()
+              else if (setViewMode) setViewMode('editor')
+            }}
+            title="Knowledge Base Home (Hub)"
+          >
+            <Home
+              size={13}
+              className={
+                viewMode === 'editor' && !activeFilePath ? 'text-zinc-200' : 'text-zinc-400'
+              }
+            />
+            <span>Home</span>
+          </button>
+
+          {/* 2. File Editor Tab */}
+          <button
+            className={`action-pill-btn ${viewMode === 'editor' && activeFilePath ? 'active' : ''}`}
             onClick={(): void => {
               if (onSwitchToFiles) onSwitchToFiles()
               if (setViewMode) setViewMode('editor')
@@ -147,15 +167,13 @@ function TopHeader({
             <FileText
               size={13}
               className={
-                viewMode === 'editor' && (sidebarView === 'explorer' || sidebarCollapsed)
-                  ? 'text-zinc-200'
-                  : 'text-zinc-400'
+                viewMode === 'editor' && activeFilePath ? 'text-zinc-200' : 'text-zinc-400'
               }
             />
             <span>Files</span>
           </button>
 
-          {/* 2. Knowledge Graph Tab */}
+          {/* 3. Knowledge Graph Tab */}
           <button
             className={`action-pill-btn ${viewMode === 'graph' ? 'active' : ''}`}
             onClick={(): void => {

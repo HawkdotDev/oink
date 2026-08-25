@@ -1,5 +1,5 @@
 import React from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Minimize2 } from 'lucide-react'
 import { OpenFileInfo } from '../../types'
 import { ProfessionalFileIcon } from '../../utils/fileIconUtils'
 import { getPathKey, normalizePath } from '../../utils/pathUtils'
@@ -60,6 +60,8 @@ interface TabBarProps {
   onTabSelect: (filePath: string) => void
   onTabClose: (filePath: string) => void
   onCreateFileAtRoot?: () => void
+  isFullScreen?: boolean
+  onToggleFullScreen?: () => void
 }
 
 function TabBarComponent({
@@ -70,47 +72,74 @@ function TabBarComponent({
   unsavedFiles,
   onTabSelect,
   onTabClose,
-  onCreateFileAtRoot
+  onCreateFileAtRoot,
+  isFullScreen,
+  onToggleFullScreen
 }: TabBarProps): React.JSX.Element | null {
-  if (openFiles.length === 0) return null
+  const displayFiles = React.useMemo(() => {
+    if (openFiles && openFiles.length > 0) return openFiles
+    if (activeFilePath) {
+      const fileName = activeFilePath.split(/[\\/]/).filter(Boolean).pop() || 'Untitled'
+      return [{ path: activeFilePath, name: fileName }]
+    }
+    return []
+  }, [openFiles, activeFilePath])
+
+  if (displayFiles.length === 0 && !isFullScreen) return null
 
   return (
-    <div className="header-tabs-container flex-1 min-w-0">
-      {openFiles.map((file) => {
-        const isActive = activeFilePath === file.path
-        const isUnsaved = unsavedFiles
-          ? !!unsavedFiles[file.path] ||
-            !!unsavedFiles[getPathKey(file.path)] ||
-            !!unsavedFiles[normalizePath(file.path)]
-          : false
+    <div className="header-tabs-container flex-1 min-w-0 flex items-stretch justify-between h-full">
+      <div className="header-tabs-scroll-area flex items-stretch h-full overflow-x-auto scrollbar-none flex-1 min-w-0">
+        {displayFiles.map((file) => {
+          const isActive = activeFilePath === file.path
+          const isUnsaved = unsavedFiles
+            ? !!unsavedFiles[file.path] ||
+              !!unsavedFiles[getPathKey(file.path)] ||
+              !!unsavedFiles[normalizePath(file.path)]
+            : false
 
-        const rel = file.path
-          .toLowerCase()
-          .replace((workspacePath || '').toLowerCase(), '')
-          .replace(/^[\\/]/, '')
-        const customIcon = fileIcons ? fileIcons[rel] : undefined
+          const rel = file.path
+            .toLowerCase()
+            .replace((workspacePath || '').toLowerCase(), '')
+            .replace(/^[\\/]/, '')
+          const customIcon = fileIcons ? fileIcons[rel] : undefined
 
-        return (
-          <TabItem
-            key={file.path}
-            file={file}
-            isActive={isActive}
-            isUnsaved={isUnsaved}
-            customIcon={customIcon}
-            onTabSelect={onTabSelect}
-            onTabClose={onTabClose}
-          />
-        )
-      })}
-      {onCreateFileAtRoot && (
-        <button
-          type="button"
-          className="header-tab-add-btn"
-          onClick={onCreateFileAtRoot}
-          title="New File Tab"
-        >
-          <Plus size={13} strokeWidth={1.75} />
-        </button>
+          return (
+            <TabItem
+              key={file.path}
+              file={file}
+              isActive={isActive}
+              isUnsaved={isUnsaved}
+              customIcon={customIcon}
+              onTabSelect={onTabSelect}
+              onTabClose={onTabClose}
+            />
+          )
+        })}
+        {onCreateFileAtRoot && (
+          <button
+            type="button"
+            className="header-tab-add-btn"
+            onClick={onCreateFileAtRoot}
+            title="New File Tab"
+          >
+            <Plus size={13} strokeWidth={1.75} />
+          </button>
+        )}
+      </div>
+
+      {isFullScreen && onToggleFullScreen && (
+        <div className="header-tabs-fullscreen-actions flex items-center px-2 shrink-0">
+          <button
+            type="button"
+            className="fullscreen-exit-tab-btn"
+            onClick={onToggleFullScreen}
+            title="Exit Full Screen (Esc / F11)"
+          >
+            <Minimize2 size={12} strokeWidth={1.75} />
+            <span>Exit Full Screen</span>
+          </button>
+        </div>
       )}
     </div>
   )

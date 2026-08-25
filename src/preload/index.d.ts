@@ -40,6 +40,7 @@ interface WindowAPI {
   close(): void
   toggleFullScreen(): void
   isFullScreen(): Promise<boolean>
+  onFullScreenChange?(callback: (isFullScreen: boolean) => void): () => void
 }
 
 declare global {

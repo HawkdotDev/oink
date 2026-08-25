@@ -145,7 +145,8 @@ if (!window.api) {
       maximize: () => {},
       close: () => {},
       toggleFullScreen: () => {},
-      isFullScreen: () => Promise.resolve(false)
+      isFullScreen: () => Promise.resolve(false),
+      onFullScreenChange: () => () => {}
     }
   }
 }

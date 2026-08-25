@@ -62,7 +62,15 @@ const api = {
     maximize: (): void => ipcRenderer.send('window:maximize'),
     close: (): void => ipcRenderer.send('window:close'),
     toggleFullScreen: (): void => ipcRenderer.send('window:toggleFullScreen'),
-    isFullScreen: (): Promise<boolean> => ipcRenderer.invoke('window:isFullScreen')
+    isFullScreen: (): Promise<boolean> => ipcRenderer.invoke('window:isFullScreen'),
+    onFullScreenChange: (callback: (isFullScreen: boolean) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, isFull: boolean): void =>
+        callback(isFull)
+      ipcRenderer.on('window:fullscreen-changed', listener)
+      return (): void => {
+        ipcRenderer.removeListener('window:fullscreen-changed', listener)
+      }
+    }
   }
 }
 

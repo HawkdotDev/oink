@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Layers, Network, Blocks, ArrowLeftRight } from 'lucide-react'
+import { Home, Blocks, ArrowLeftRight } from 'lucide-react'
 
 export type ActivityRailTab = 'home' | 'explorer' | 'graph' | 'plugins' | 'search'
 
@@ -33,16 +33,6 @@ function ActivityRail({
           <Home size={15} strokeWidth={1.8} />
         </button>
 
-        {/* Database / Folders & Documents Explorer */}
-        <button
-          type="button"
-          className={`rail-nav-item ${activeTab === 'explorer' ? 'active' : ''}`}
-          onClick={(): void => onSelectTab('explorer')}
-          title="Folders & Documents"
-        >
-          <Layers size={15} strokeWidth={1.8} />
-        </button>
-
         {/* Sync / Switcher */}
         <button
           type="button"
@@ -54,16 +44,6 @@ function ActivityRail({
           title="Quick Switcher / Search (Ctrl+P)"
         >
           <ArrowLeftRight size={14} strokeWidth={1.8} />
-        </button>
-
-        {/* Knowledge Graph View */}
-        <button
-          type="button"
-          className={`rail-nav-item ${activeTab === 'graph' ? 'active' : ''}`}
-          onClick={(): void => onSelectTab('graph')}
-          title="Knowledge Graph"
-        >
-          <Network size={15} strokeWidth={1.8} />
         </button>
 
         {/* Extensions / Plugins */}

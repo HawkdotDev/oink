@@ -5,7 +5,6 @@ import {
   Copy,
   Files,
   Trash2,
-  Maximize2,
   Sliders,
   Lock,
   Unlock,
@@ -16,7 +15,8 @@ import {
   Upload,
   RotateCcw,
   ChevronRight,
-  Check
+  Check,
+  Save
 } from 'lucide-react'
 import { FontOption } from './fontsData'
 
@@ -32,8 +32,8 @@ interface PageActionMainViewProps {
   onCopyPageContent: () => void
   onDuplicateFile?: () => void
   onDeleteFile?: () => void
-  isFullScreen?: boolean
-  onToggleFullScreen?: () => void
+  autoSaveEnabled?: boolean
+  onToggleAutoSave?: () => void
   isPageLocked?: boolean
   onToggleLockPage?: () => void
   onOpenAI?: () => void
@@ -54,8 +54,8 @@ function PageActionMainViewComponent({
   onCopyPageContent,
   onDuplicateFile,
   onDeleteFile,
-  isFullScreen = false,
-  onToggleFullScreen,
+  autoSaveEnabled = true,
+  onToggleAutoSave,
   isPageLocked = false,
   onToggleLockPage,
   onOpenAI,
@@ -195,20 +195,14 @@ function PageActionMainViewComponent({
           </div>
         )}
 
-        {/* Toggle: Full screen */}
-        {match('full screen distraction free zen mode') && onToggleFullScreen && (
-          <div
-            className="page-action-row"
-            onClick={(): void => {
-              onToggleFullScreen()
-              onClose()
-            }}
-          >
+        {/* Toggle: Autosave */}
+        {match('autosave auto save background saving') && onToggleAutoSave && (
+          <div className="page-action-row" onClick={onToggleAutoSave}>
             <div className="page-action-left">
-              <Maximize2 size={14} className="text-zinc-400 shrink-0" />
-              <span className="page-action-title">Full screen</span>
+              <Save size={14} className="text-zinc-400 shrink-0" />
+              <span className="page-action-title">Autosave</span>
             </div>
-            <div className={`page-action-switch ${isFullScreen ? 'active' : ''}`}>
+            <div className={`page-action-switch ${autoSaveEnabled ? 'active' : ''}`}>
               <div className="switch-knob" />
             </div>
           </div>

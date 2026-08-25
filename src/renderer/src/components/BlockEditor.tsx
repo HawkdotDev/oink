@@ -220,7 +220,17 @@ function BlockEditorComponent({
     const api = pendingApiRef.current || editorInstanceRef.current
     if (!api) return
     try {
-      const savedData = (await api.saver.save()) as EditorJSData
+      if (api.isReady) {
+        await api.isReady
+      }
+      let savedData: EditorJSData | null = null
+      if (typeof api.save === 'function') {
+        savedData = (await api.save()) as EditorJSData
+      } else if (typeof api.saver?.save === 'function') {
+        savedData = (await api.saver.save()) as EditorJSData
+      }
+      if (!savedData) return
+
       const markdown = serializeEditorJSToMarkdown(savedData)
 
       // Record snapshot to history stack if content changed and not in undo/redo execution
@@ -247,8 +257,18 @@ function BlockEditorComponent({
       clearTimeout(changeDebounceTimerRef.current)
       changeDebounceTimerRef.current = null
       try {
-        const currentData = (await editor.saver.save()) as EditorJSData
-        historyManagerRef.current.record(currentData)
+        if (editor.isReady) {
+          await editor.isReady
+        }
+        let currentData: EditorJSData | null = null
+        if (typeof editor.save === 'function') {
+          currentData = (await editor.save()) as EditorJSData
+        } else if (typeof editor.saver?.save === 'function') {
+          currentData = (await editor.saver.save()) as EditorJSData
+        }
+        if (currentData) {
+          historyManagerRef.current.record(currentData)
+        }
       } catch {
         // ignore
       }

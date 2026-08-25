@@ -30,6 +30,14 @@ export function createMainWindow(): BrowserWindow {
     mainWindow.show()
   })
 
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow.webContents.send('window:fullscreen-changed', true)
+  })
+
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow.webContents.send('window:fullscreen-changed', false)
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
@@ -71,7 +79,9 @@ export function registerWindowControlHandlers(): void {
   ipcMain.on('window:toggleFullScreen', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-      win.setFullScreen(!win.isFullScreen())
+      const isFull = !win.isFullScreen()
+      win.setFullScreen(isFull)
+      win.webContents.send('window:fullscreen-changed', isFull)
     }
   })
 

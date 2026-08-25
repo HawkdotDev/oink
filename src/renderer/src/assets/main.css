@@ -1083,13 +1083,13 @@ body {
 }
 
 .action-pill-btn {
-  background: #202024;
-  border: 1px solid #2e2e34;
+  /* background: #202024; */
+  /* border: 1px solid #2e2e34; */
   color: var(--text-main);
   font-size: 11px;
   font-weight: 500;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1837,13 +1837,56 @@ body {
   display: flex;
   align-items: stretch;
   gap: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+.header-tabs-scroll-area {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
   overflow-x: auto;
   scrollbar-width: none;
   height: 100%;
 }
 
-.header-tabs-container::-webkit-scrollbar {
+.header-tabs-scroll-area::-webkit-scrollbar {
   display: none;
+}
+
+.header-tabs-fullscreen-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.fullscreen-exit-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.fullscreen-exit-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.fullscreen-exit-tab-btn:active {
+  transform: scale(0.97);
 }
 
 .header-tab {
@@ -2891,20 +2934,6 @@ body {
 
 /* ====== EDITOR WORKSPACE ====== */
 
-/* Breadcrumbs bar */
-.editor-top-nav {
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 4px 0 6px;
-  border-bottom: 1px solid #222226;
-  background-color: transparent;
-  font-size: 11px;
-  color: var(--text-muted);
-  position: relative;
-}
-
 .header-pipe-separator {
   width: 1px;
   height: 14px;
@@ -3754,13 +3783,21 @@ code.inline-code {
   width: 440px;
   background: #1c1c21;
   border: 1px solid #2e2e38;
+  border-radius: 8px;
   padding: 12px;
   box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.65),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 16px 36px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
   z-index: 1000;
   backdrop-filter: blur(16px);
   user-select: none;
+}
+
+.notion-cover-actions .banner-picker-popover {
+  right: 0;
+  left: auto;
+  top: calc(100% + 6px);
+  margin-top: 0;
 }
 
 .banner-picker-header {
@@ -5059,55 +5096,28 @@ code.inline-code {
   width: 100vw !important;
   height: 100vh !important;
   overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
+.app-container.distraction-free-fullscreen .top-header,
 .app-container.distraction-free-fullscreen .app-top-header,
-.app-container.distraction-free-fullscreen .activity-rail-wrapper,
-.app-container.distraction-free-fullscreen .activity-rail,
-.app-container.distraction-free-fullscreen .sidebar,
-.app-container.distraction-free-fullscreen .app-actions-bar,
-.app-container.distraction-free-fullscreen .editor-top-nav,
-.app-container.distraction-free-fullscreen .editor-resizer-left,
-.app-container.distraction-free-fullscreen .statusbar-floating-container {
+.app-container.distraction-free-fullscreen .editor-top-nav {
   display: none !important;
+}
+
+.app-container.distraction-free-fullscreen .app-actions-bar {
+  display: flex !important;
+  width: 100vw !important;
+  flex-shrink: 0 !important;
 }
 
 .app-container.distraction-free-fullscreen .app-main {
   width: 100vw !important;
-  height: 100vh !important;
-}
-
-.app-container.distraction-free-fullscreen .editor-workspace {
-  width: 100vw !important;
-  height: 100vh !important;
-  border-left: none !important;
-  background: #18181b !important;
-}
-
-.app-container.distraction-free-fullscreen .editor-center-split {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.app-container.distraction-free-fullscreen .editor-writing-viewport {
-  width: 100% !important;
-  height: 100% !important;
-  background: #18181b !important;
-  padding-top: 0 !important;
-}
-
-.app-container.distraction-free-fullscreen .editor-container {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-}
-
-.app-container.distraction-free-fullscreen .editor-wrapper {
-  max-width: 900px !important;
-  width: 100% !important;
-  margin: 0 auto !important;
-  padding: 60px 48px 120px 48px !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: calc(100vh - 36px) !important;
+  display: flex !important;
 }
 
 /* Floating Exit Fullscreen pill container */
@@ -6685,52 +6695,6 @@ code.inline-code {
   opacity: 0 !important;
   pointer-events: none !important;
   overflow: hidden !important;
-}
-
-/* Over-the-edge Open / Close Button */
-.activity-rail-edge-toggle {
-  position: absolute;
-  bottom: 24px;
-  right: -15px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #1c1c21;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #e4e4e7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 110;
-  padding: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
-  opacity: 1 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.activity-rail-wrapper:hover .activity-rail-edge-toggle,
-.activity-rail-edge-toggle:hover {
-  opacity: 1 !important;
-  color: #ffffff;
-  background: #282830;
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
-}
-
-.activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle {
-  left: 0;
-  right: auto;
-  opacity: 1 !important;
-  background: #1c1c21;
-  border-color: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-}
-
-.activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle:hover {
-  opacity: 1 !important;
-  background: #282830;
 }
 
 /* Sidebar Toggle in Tabs / Breadcrumbs Bar */

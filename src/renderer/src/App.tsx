@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
-import { AppWindow, ListTree, X, Minimize2, Image, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AppWindow, ListTree, X, Minimize2, Image } from 'lucide-react'
 import BlockEditor from './components/BlockEditor'
 import BannerPicker from './components/BannerPicker'
 import NotionPageHeader from './components/editor/NotionPageHeader'
@@ -360,11 +360,15 @@ export default function App(): React.JSX.Element {
   }, [sidebarCollapsed, sidebarView])
 
   const handleSwitchToFiles = useCallback(() => {
+    setViewMode('editor')
     setSidebarView('explorer')
     if (sidebarCollapsed) {
       setSidebarCollapsed(false)
     }
-  }, [sidebarCollapsed])
+    if (!activeFilePath && openFiles.length > 0) {
+      setActiveFilePath(openFiles[0].path)
+    }
+  }, [sidebarCollapsed, activeFilePath, openFiles, setActiveFilePath])
 
   // 11. Workspace Action Handlers (Connecting Hooks)
   const onOpenWorkspaceClick = useCallback(async () => {
@@ -606,15 +610,35 @@ export default function App(): React.JSX.Element {
 
   // 14. Document Exports & Utilities
   const handleToggleFullScreen = useCallback(() => {
-    setIsFullScreen((prev) => {
-      const next = !prev
-      try {
-        window.api?.window?.toggleFullScreen?.()
-      } catch {
-        // ignore
+    try {
+      if (document.fullscreenElement) {
+        void document.exitFullscreen?.().catch(() => {})
+      } else if (document.documentElement?.requestFullscreen) {
+        void document.documentElement.requestFullscreen().catch(() => {})
       }
-      return next
+    } catch {
+      // ignore
+    }
+    try {
+      window.api?.window?.toggleFullScreen?.()
+    } catch {
+      // ignore
+    }
+    setIsFullScreen((prev) => !prev)
+  }, [])
+
+  useEffect(() => {
+    const unsub = window.api?.window?.onFullScreenChange?.((isFull) => {
+      setIsFullScreen(isFull)
     })
+    const onDomFsChange = (): void => {
+      setIsFullScreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', onDomFsChange)
+    return (): void => {
+      unsub?.()
+      document.removeEventListener('fullscreenchange', onDomFsChange)
+    }
   }, [])
 
   const handleToggleLockPage = useCallback(() => {
@@ -803,6 +827,12 @@ export default function App(): React.JSX.Element {
     saveState
   ])
 
+  const handleSwitchToHome = useCallback(() => {
+    setActiveFilePath(null)
+    setViewMode('editor')
+    setSidebarView('explorer')
+  }, [setActiveFilePath])
+
   const handleSelectRailTab = useCallback(
     (tab: ActivityRailTab) => {
       setRailTab(tab)
@@ -860,6 +890,7 @@ export default function App(): React.JSX.Element {
         sidebarView={sidebarView}
         sidebarCollapsed={effectiveSidebarCollapsed}
         onTogglePluginsView={handleTogglePluginsView}
+        onSwitchToHome={handleSwitchToHome}
         onSwitchToFiles={handleSwitchToFiles}
         enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
         showTabs={showTabs}
@@ -970,20 +1001,6 @@ export default function App(): React.JSX.Element {
               setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
             }
           />
-
-          {/* Over-the-edge Open / Close Button for Activity Rail */}
-          <button
-            type="button"
-            className="activity-rail-edge-toggle"
-            onClick={(): void => setActivityRailCollapsed((prev) => !prev)}
-            title={activityRailCollapsed ? 'Expand Activity Rail' : 'Collapse Activity Rail'}
-          >
-            {activityRailCollapsed ? (
-              <ChevronRight size={14} strokeWidth={2.4} />
-            ) : (
-              <ChevronLeft size={14} strokeWidth={2.4} />
-            )}
-          </button>
         </div>
 
         {/* Sidebar Panel */}
@@ -1025,7 +1042,7 @@ export default function App(): React.JSX.Element {
 
         {/* Editor Workspace & Split Area */}
         <div className={`editor-workspace ${effectiveSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-          {viewMode !== 'graph' && showTabs && (
+          {viewMode !== 'graph' && showTabs && !isFullScreen && (
             <div className="editor-top-nav">
               <TabBar
                 openFiles={openFiles}
@@ -1038,6 +1055,8 @@ export default function App(): React.JSX.Element {
                 onCreateFileAtRoot={(): void => {
                   void handleCreateFileAtRoot()
                 }}
+                isFullScreen={isFullScreen}
+                onToggleFullScreen={handleToggleFullScreen}
               />
             </div>
           )}
@@ -1088,24 +1107,34 @@ export default function App(): React.JSX.Element {
                             }
                       }
                     >
-                      <div className="notion-cover-actions opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="notion-cover-btn"
-                          onClick={(): void => setShowBannerPicker((prev) => !prev)}
-                        >
-                          <Image size={12} strokeWidth={1.75} className="shrink-0 opacity-80" />
-                          <span>Change cover</span>
-                        </button>
+                      <div
+                        className={`notion-cover-actions ${showBannerPicker ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+                      >
+                        <div className="relative">
+                          <button
+                            className="notion-cover-btn"
+                            onClick={(): void => setShowBannerPicker((prev) => !prev)}
+                          >
+                            <Image size={12} strokeWidth={1.75} className="shrink-0 opacity-80" />
+                            <span>Change cover</span>
+                          </button>
+
+                          {showBannerPicker && (
+                            <BannerPicker
+                              onSelect={(bannerUrl): void => {
+                                if (activeRelKey) handleSetFileBanner(activeRelKey, bannerUrl)
+                                setShowBannerPicker(false)
+                              }}
+                              onClose={(): void => setShowBannerPicker(false)}
+                            />
+                          )}
+                        </div>
+
                         <button
                           className="notion-cover-btn"
                           onClick={(): void => {
-                            if (!activeFilePath) return
-                            const rel = getRelativePath(activeFilePath, workspacePath).toLowerCase()
-                            setFileBanners((prev) => {
-                              const updated = { ...prev }
-                              delete updated[rel]
-                              return updated
-                            })
+                            if (!activeRelKey) return
+                            handleSetFileBanner(activeRelKey, null)
                           }}
                         >
                           Remove
@@ -1260,17 +1289,6 @@ export default function App(): React.JSX.Element {
           </div>
         </div>
       </div>
-
-      {/* Popovers */}
-      {showBannerPicker && (
-        <BannerPicker
-          onSelect={(bannerUrl): void => {
-            if (activeRelKey) handleSetFileBanner(activeRelKey, bannerUrl)
-            setShowBannerPicker(false)
-          }}
-          onClose={(): void => setShowBannerPicker(false)}
-        />
-      )}
 
       {/* ====== PREFERENCES & SETTINGS MODAL ====== */}
       <SettingsModal
