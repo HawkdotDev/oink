@@ -1,11 +1,11 @@
 import React from 'react'
 import {
   Home,
+  Layers,
   Network,
   Blocks,
   Settings,
   ArrowLeftRight,
-  Boxes,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react'
@@ -31,27 +31,31 @@ function ActivityRail({
   sidebarCollapsed = false,
   onToggleSidebar
 }: ActivityRailProps): React.JSX.Element {
-  const handleToggleOrSelectSidebar = (): void => {
-    if (onToggleSidebar) {
-      onToggleSidebar()
-    } else {
-      onSelectTab('explorer')
-    }
-  }
-
   return (
     <nav className="activity-rail select-none flex flex-col items-center justify-between py-3">
-      {/* Top Group: Brand Icon & Core Views */}
+      {/* Top Group: Open / Close Sidebar Button & Core Views */}
       <div className="flex flex-col items-center gap-4 w-full">
-        {/* Brand Cube Icon */}
+        {/* Open / Close Sidebar Toggle (Replaced Oink Knowledge Base Button) */}
         <button
           type="button"
           className="rail-brand-btn group"
-          onClick={(): void => onSelectTab('home')}
-          title="Oink Knowledge Base"
+          onClick={onToggleSidebar}
+          title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
         >
           <div className="rail-brand-icon-wrap">
-            <Boxes size={16} className="text-zinc-100 group-hover:scale-110 transition-transform" />
+            {sidebarCollapsed ? (
+              <PanelLeftOpen
+                size={16}
+                strokeWidth={1.8}
+                className="text-zinc-300 group-hover:text-white transition-colors"
+              />
+            ) : (
+              <PanelLeftClose
+                size={16}
+                strokeWidth={1.8}
+                className="text-zinc-300 group-hover:text-white transition-colors"
+              />
+            )}
           </div>
         </button>
 
@@ -67,18 +71,14 @@ function ActivityRail({
             <Home size={15} strokeWidth={1.8} />
           </button>
 
-          {/* Open / Close Sidebar Button (Replacing Knowledge Base button) */}
+          {/* Database / Folders & Documents Explorer */}
           <button
             type="button"
-            className={`rail-nav-item ${!sidebarCollapsed && activeTab === 'explorer' ? 'active' : ''}`}
-            onClick={handleToggleOrSelectSidebar}
-            title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
+            className={`rail-nav-item ${activeTab === 'explorer' ? 'active' : ''}`}
+            onClick={(): void => onSelectTab('explorer')}
+            title="Folders & Documents"
           >
-            {sidebarCollapsed ? (
-              <PanelLeftOpen size={15} strokeWidth={1.8} />
-            ) : (
-              <PanelLeftClose size={15} strokeWidth={1.8} />
-            )}
+            <Layers size={15} strokeWidth={1.8} />
           </button>
 
           {/* Sync / Switcher */}
