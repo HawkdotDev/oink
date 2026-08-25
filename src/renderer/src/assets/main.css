@@ -5060,6 +5060,7 @@ code.inline-code {
 }
 
 .app-container.distraction-free-fullscreen .app-top-header,
+.app-container.distraction-free-fullscreen .activity-rail-column,
 .app-container.distraction-free-fullscreen .activity-rail-wrapper,
 .app-container.distraction-free-fullscreen .activity-rail,
 .app-container.distraction-free-fullscreen .sidebar,
@@ -6632,13 +6633,41 @@ code.inline-code {
 }
 
 /* ==============================================================================
-   ACTIVITY RAIL (Far-Left Navigation Dock & Over-The-Edge Toggle)
+   ACTIVITY RAIL (Permanent Top Slot & Navigation Dock & Over-The-Edge Toggle)
    ============================================================================== */
+.activity-rail-column {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  height: 100%;
+  position: relative;
+  z-index: 101;
+  background-color: #0b0b0d;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-toggle-permanent-slot {
+  width: 44px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0b0b0d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+  z-index: 102;
+  flex-shrink: 0;
+}
+
 .activity-rail-wrapper {
   position: relative;
   display: flex;
-  height: 100%;
-  z-index: 101;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
 }
 
 .activity-rail {
@@ -6647,32 +6676,21 @@ code.inline-code {
   max-width: 44px;
   height: 100%;
   background-color: #0b0b0d;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 12px 0;
+  justify-content: flex-start;
+  padding: 8px 0;
   user-select: none;
   transition:
-    width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    min-width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    max-width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 0.15s ease,
-    padding 0.2s ease;
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .activity-rail-wrapper.rail-collapsed .activity-rail {
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  border-right: none !important;
   opacity: 0 !important;
-  overflow: hidden !important;
   pointer-events: none !important;
+  transform: translateX(-44px);
 }
 
 /* Over-the-edge Open / Close Button */

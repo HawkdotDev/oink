@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
-import { AppWindow, ListTree, X, Minimize2, Image, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  AppWindow,
+  ListTree,
+  X,
+  Minimize2,
+  Image,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen
+} from 'lucide-react'
 import BlockEditor from './components/BlockEditor'
 import BannerPicker from './components/BannerPicker'
 import NotionPageHeader from './components/editor/NotionPageHeader'
@@ -884,36 +894,63 @@ export default function App(): React.JSX.Element {
 
       {/* ====== 2. MAIN APP BODY CONTAINER ====== */}
       <div className="app-body flex flex-1 min-h-0 min-w-0 overflow-hidden">
-        {/* Activity Rail Wrapper with Over-the-edge Toggle Button */}
-        <div
-          className={`activity-rail-wrapper relative flex shrink-0 ${activityRailCollapsed ? 'rail-collapsed' : ''}`}
-        >
-          {/* Activity Rail on the far left - spans from SubHeader/Tabs level down to window bottom */}
-          <ActivityRail
-            activeTab={railTab}
-            onSelectTab={handleSelectRailTab}
-            sidebarCollapsed={effectiveSidebarCollapsed}
-            onToggleSidebar={handleToggleSidebar}
-            onOpenSettings={(): void => setShowSettingsModal(true)}
-            enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
-            onToggleSearch={(): void =>
-              setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
-            }
-          />
+        {/* Activity Rail Column: Permanent Top Sidebar Toggle + Collapsible Rail Nav Dock */}
+        <div className="activity-rail-column flex flex-col shrink-0">
+          {/* Permanent Top Slot for Sidebar Open/Close Toggle (Stays in its place irrespective of anything) */}
+          <div className="sidebar-toggle-permanent-slot flex items-center justify-center">
+            <button
+              type="button"
+              className="rail-brand-btn group"
+              onClick={handleToggleSidebar}
+              title={effectiveSidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
+            >
+              <div className="rail-brand-icon-wrap">
+                {effectiveSidebarCollapsed ? (
+                  <PanelLeftOpen
+                    size={16}
+                    strokeWidth={1.8}
+                    className="text-zinc-300 group-hover:text-white transition-colors"
+                  />
+                ) : (
+                  <PanelLeftClose
+                    size={16}
+                    strokeWidth={1.8}
+                    className="text-zinc-300 group-hover:text-white transition-colors"
+                  />
+                )}
+              </div>
+            </button>
+          </div>
 
-          {/* Over-the-edge Open / Close Button */}
-          <button
-            type="button"
-            className="activity-rail-edge-toggle"
-            onClick={(): void => setActivityRailCollapsed((prev) => !prev)}
-            title={activityRailCollapsed ? 'Expand Activity Rail' : 'Collapse Activity Rail'}
+          {/* Activity Rail Nav Dock Wrapper with Over-the-edge Toggle Button */}
+          <div
+            className={`activity-rail-wrapper relative flex flex-1 min-h-0 ${activityRailCollapsed ? 'rail-collapsed' : ''}`}
           >
-            {activityRailCollapsed ? (
-              <ChevronRight size={14} strokeWidth={2.4} />
-            ) : (
-              <ChevronLeft size={14} strokeWidth={2.4} />
-            )}
-          </button>
+            <ActivityRail
+              activeTab={railTab}
+              onSelectTab={handleSelectRailTab}
+              sidebarCollapsed={effectiveSidebarCollapsed}
+              onToggleSidebar={handleToggleSidebar}
+              enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
+              onToggleSearch={(): void =>
+                setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
+              }
+            />
+
+            {/* Over-the-edge Open / Close Button */}
+            <button
+              type="button"
+              className="activity-rail-edge-toggle"
+              onClick={(): void => setActivityRailCollapsed((prev) => !prev)}
+              title={activityRailCollapsed ? 'Expand Activity Rail' : 'Collapse Activity Rail'}
+            >
+              {activityRailCollapsed ? (
+                <ChevronRight size={14} strokeWidth={2.4} />
+              ) : (
+                <ChevronLeft size={14} strokeWidth={2.4} />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* App Content Column (SubHeader + Workspace) */}
