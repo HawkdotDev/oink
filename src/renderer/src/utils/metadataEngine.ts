@@ -124,7 +124,7 @@ class AsyncOinkMetadataEngine {
       }
     }
 
-    if (rawData) {
+    if (rawData && rawData.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(rawData) as StoredWorkspaceMetadataFile
         const filesMap: Record<string, OinkFileMetadata> = parsed.files || {}

@@ -32,7 +32,21 @@ if (!window.api) {
     fs: {
       openDirectory: () => Promise.resolve({ path: '/workspace', name: 'workspace' }),
       readDirectory: (dirPath: string) => Promise.resolve(mockFiles[dirPath] || []),
-      readFile: () => Promise.resolve('// Sample File Content\n'),
+      readFile: (filePath: string) => {
+        if (filePath.endsWith('.json')) {
+          return Promise.resolve(
+            JSON.stringify({
+              workspace: { name: 'workspace', id: 'ws_mock', createdAt: Date.now() },
+              session: {},
+              files: {}
+            })
+          )
+        }
+        if (filePath.endsWith('config.ts')) {
+          return Promise.resolve('export const config = {}')
+        }
+        return Promise.resolve('# Welcome to Oink\n\nThis is a sample markdown file.')
+      },
       writeFile: () => Promise.resolve(),
       createFile: (dir: string, name: string) => Promise.resolve(`${dir}/${name}`),
       createFolder: (dir: string, name: string) => Promise.resolve(`${dir}/${name}`),
