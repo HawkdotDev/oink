@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import ShareMenu from './subheader/ShareMenu'
 import PageActionsMenu from './subheader/PageActionsMenu'
 import { StatusStatsConfig, OpenFileInfo } from '../../types'
@@ -79,10 +79,6 @@ function formatRelativeEditedTime(timestamp?: number | null): string {
 }
 
 function SubHeader({
-  sidebarCollapsed = false,
-  onToggleSidebar,
-  onSidebarHoverEnter,
-  onSidebarHoverLeave,
   workspacePath,
   workspaceName,
   activeFilePath,
@@ -166,24 +162,6 @@ function SubHeader({
     <div className="app-actions-bar select-none">
       {/* Left Application Brand Logo & Navigation Breadcrumbs / File Tabs */}
       <div className="actions-bar-left flex items-center gap-2 overflow-hidden">
-        {/* Open / Close Sidebar Button in Breadcrumbs bar */}
-        {onToggleSidebar && (
-          <button
-            type="button"
-            className="sidebar-toggle-bar-btn"
-            onClick={onToggleSidebar}
-            onMouseEnter={onSidebarHoverEnter}
-            onMouseLeave={onSidebarHoverLeave}
-            title={sidebarCollapsed ? 'Open sidebar (Ctrl+B)' : 'Close sidebar (Ctrl+B)'}
-          >
-            {sidebarCollapsed ? (
-              <PanelLeftOpen size={15} strokeWidth={1.75} />
-            ) : (
-              <PanelLeftClose size={15} strokeWidth={1.75} />
-            )}
-          </button>
-        )}
-
         {/* 2 Segmented Tabs determining display after divider */}
         <div className="subheader-tab-cluster">
           <button
