@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Plus, Search, FolderPlus, FilePlus } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { Search, X } from 'lucide-react'
 import WorkspaceSelector from './WorkspaceSelector'
 import type { SidebarViewMode } from './SidebarBody'
 
@@ -40,14 +40,16 @@ function SidebarHeader({
   activeSubTab = 'folders',
   onSelectSubTab
 }: SidebarHeaderProps): React.JSX.Element {
-  const [showAddMenu, setShowAddMenu] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
+  const isSearchOpen = showSearch || Boolean(searchQuery && searchQuery.trim().length > 0)
   const displayName = workspaceName || 'Knowledge Base'
 
   return (
     <div className="sidebar-header-redesign select-none">
       {/* Top Title & Action Controls Row */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-2">
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         {/* Workspace Title with Popover Trigger */}
         <WorkspaceSelector
           workspacePath={workspacePath}
@@ -63,63 +65,66 @@ function SidebarHeader({
           onCreateFileAtRoot={onCreateFileAtRoot}
         />
 
-        {/* Right Header Buttons: + */}
+        {/* Right Header Buttons: Search Toggle */}
         <div className="flex items-center gap-1 shrink-0 relative">
           <button
             type="button"
-            className="sidebar-header-icon-btn"
-            onClick={(): void => setShowAddMenu((p) => !p)}
-            title="Create new file or folder"
+            className={`sidebar-header-icon-btn ${isSearchOpen ? 'active' : ''}`}
+            onClick={(): void => {
+              setShowSearch((prev) => {
+                const next = !prev
+                if (!next && onSearchChange) {
+                  onSearchChange('')
+                }
+                return next
+              })
+              if (!showSearch) {
+                setTimeout(() => searchInputRef.current?.focus(), 50)
+              }
+            }}
+            title={isSearchOpen ? 'Close Search (Esc)' : 'Search Files (Ctrl+F)'}
           >
-            <Plus size={15} strokeWidth={2} />
+            <Search size={14} strokeWidth={1.8} />
           </button>
-
-          {/* Quick Create Dropdown Menu */}
-          {showAddMenu && (
-            <div
-              className="sidebar-quick-add-menu"
-              onMouseLeave={(): void => setShowAddMenu(false)}
-            >
-              <button
-                type="button"
-                className="quick-add-item"
-                onClick={(): void => {
-                  onCreateFileAtRoot()
-                  setShowAddMenu(false)
-                }}
-              >
-                <FilePlus size={13} className="text-zinc-400" />
-                <span>New Page</span>
-              </button>
-              <button
-                type="button"
-                className="quick-add-item"
-                onClick={(): void => {
-                  window.dispatchEvent(new CustomEvent('create-root-folder'))
-                  setShowAddMenu(false)
-                }}
-              >
-                <FolderPlus size={13} className="text-zinc-400" />
-                <span>New Folder</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Search Pill Input Matching Reference Image */}
-      <div className="px-3 pb-2">
-        <div className="sidebar-search-pill flex items-center gap-2">
-          <Search size={13} className="text-zinc-400 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e): void => onSearchChange?.(e.target.value)}
-            className="sidebar-search-input-field"
-          />
+      {/* Search Pill Input: Only rendered when search is toggled open */}
+      {isSearchOpen && (
+        <div className="px-3 pb-2">
+          <div className="sidebar-search-pill flex items-center gap-2">
+            <Search size={13} className="text-zinc-400 shrink-0" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search files..."
+              value={searchQuery}
+              onChange={(e): void => onSearchChange?.(e.target.value)}
+              className="sidebar-search-input-field"
+              autoFocus
+              onKeyDown={(e): void => {
+                if (e.key === 'Escape') {
+                  if (searchQuery) {
+                    onSearchChange?.('')
+                  } else {
+                    setShowSearch(false)
+                  }
+                }
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="text-zinc-500 hover:text-zinc-300 p-0.5 cursor-pointer"
+                onClick={(): void => onSearchChange?.('')}
+                title="Clear search"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Segmented Switcher: [ Folders ] | [ Tags ] */}
       <div className="px-3 pb-2">

@@ -57,7 +57,7 @@ function DocumentStatsWidgetComponent({
         </div>
 
         <div className="bg-zinc-900/70 border border-zinc-800/80 p-2.5 flex items-center gap-2">
-          <AlignLeft size={14} className="text-blue-400" />
+          <AlignLeft size={14} className="text-zinc-300" />
           <div>
             <div className="font-bold text-zinc-300">{lines}</div>
             <div className="text-[10px] text-zinc-500">Lines</div>

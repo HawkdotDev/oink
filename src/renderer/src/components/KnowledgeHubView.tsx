@@ -444,7 +444,7 @@ function KnowledgeHubView({
                                 />
                               )}
                             </span>
-                            <span className="hub-file-name truncate group-hover:text-blue-400 transition-colors">
+                            <span className="hub-file-name truncate group-hover:text-white transition-colors">
                               {file.name}
                             </span>
                           </div>

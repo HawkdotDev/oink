@@ -74,7 +74,7 @@ function PageActionFontsViewComponent({
                 <span className="font-chooser-preview text-sm font-medium">Ag</span>
                 <span className="font-chooser-name text-xs">{f.name}</span>
               </div>
-              {isSelected && <Check size={12} className="text-blue-400 shrink-0" />}
+              {isSelected && <Check size={12} className="text-white shrink-0" />}
             </div>
           )
         })}

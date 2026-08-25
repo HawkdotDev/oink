@@ -8,12 +8,12 @@ interface TagItem {
 }
 
 const DEFAULT_TAGS: TagItem[] = [
-  { id: '1', name: 'General', color: '#3b82f6', count: 12 },
+  { id: '1', name: 'General', color: '#71717a', count: 12 },
   { id: '2', name: 'Onboarding', color: '#10b981', count: 8 },
   { id: '3', name: 'Design', color: '#8b5cf6', count: 5 },
   { id: '4', name: 'Roadmap', color: '#f59e0b', count: 4 },
   { id: '5', name: 'Interviews', color: '#ec4899', count: 3 },
-  { id: '6', name: 'Documentation', color: '#06b6d4', count: 7 }
+  { id: '6', name: 'Documentation', color: '#10b981', count: 7 }
 ]
 
 interface SidebarTagsViewProps {

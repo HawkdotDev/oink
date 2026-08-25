@@ -39,11 +39,13 @@ export function ProfessionalFileIcon({
   }
   if (name.startsWith('tsconfig') && name.endsWith('.json')) {
     return (
-      <FileCheck size={13} fill="currentColor" className={`text-blue-400 shrink-0 ${className}`} />
+      <FileCheck size={13} fill="currentColor" className={`text-zinc-300 shrink-0 ${className}`} />
     )
   }
   if (name === 'dockerfile' || name.startsWith('dockerfile.')) {
-    return <Flame size={13} fill="currentColor" className={`text-sky-400 shrink-0 ${className}`} />
+    return (
+      <Flame size={13} fill="currentColor" className={`text-orange-400 shrink-0 ${className}`} />
+    )
   }
   if (name.startsWith('.git') || name === '.gitignore') {
     return (
@@ -70,11 +72,13 @@ export function ProfessionalFileIcon({
         <FileCode2
           size={13}
           fill="currentColor"
-          className={`text-blue-400 shrink-0 ${className}`}
+          className={`text-zinc-300 shrink-0 ${className}`}
         />
       )
     case 'tsx':
-      return <Atom size={13} fill="currentColor" className={`text-sky-400 shrink-0 ${className}`} />
+      return (
+        <Atom size={13} fill="currentColor" className={`text-zinc-200 shrink-0 ${className}`} />
+      )
 
     // JavaScript & React
     case 'js':
@@ -175,14 +179,14 @@ export function ProfessionalFileIcon({
     case 'c':
     case 'h':
       return (
-        <Binary size={13} fill="currentColor" className={`text-blue-500 shrink-0 ${className}`} />
+        <Binary size={13} fill="currentColor" className={`text-zinc-400 shrink-0 ${className}`} />
       )
     case 'cpp':
     case 'hpp':
     case 'cc':
     case 'cxx':
       return (
-        <Binary size={13} fill="currentColor" className={`text-blue-600 shrink-0 ${className}`} />
+        <Binary size={13} fill="currentColor" className={`text-zinc-300 shrink-0 ${className}`} />
       )
     case 'cs':
       return (
@@ -200,7 +204,7 @@ export function ProfessionalFileIcon({
       )
     case 'php':
       return (
-        <Server size={13} fill="currentColor" className={`text-indigo-400 shrink-0 ${className}`} />
+        <Server size={13} fill="currentColor" className={`text-violet-400 shrink-0 ${className}`} />
       )
     case 'rb':
       return <Gem size={13} fill="currentColor" className={`text-rose-600 shrink-0 ${className}`} />
@@ -253,7 +257,7 @@ export function ProfessionalFileIcon({
         <FileImage
           size={13}
           fill="currentColor"
-          className={`text-indigo-400 shrink-0 ${className}`}
+          className={`text-purple-400 shrink-0 ${className}`}
         />
       )
 

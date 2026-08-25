@@ -203,7 +203,7 @@ function SubHeader({
         {onToggleActivityRail && (
           <button
             type="button"
-            className={`sidebar-toggle-bar-btn ${activityRailCollapsed ? 'opacity-65' : ''}`}
+            className={`sidebar-toggle-bar-btn ${!activityRailCollapsed ? 'active' : ''}`}
             onClick={onToggleActivityRail}
             title={activityRailCollapsed ? 'Show Activity Rail' : 'Hide Activity Rail'}
           >
@@ -215,7 +215,7 @@ function SubHeader({
         {onToggleSidebar && (
           <button
             type="button"
-            className="sidebar-toggle-bar-btn"
+            className={`sidebar-toggle-bar-btn ${!sidebarCollapsed ? 'active' : ''}`}
             onClick={onToggleSidebar}
             onMouseEnter={onSidebarHoverEnter}
             onMouseLeave={onSidebarHoverLeave}

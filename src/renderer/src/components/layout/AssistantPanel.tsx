@@ -296,7 +296,7 @@ export default function AssistantPanel({
               onClick={(): void => handleAiAction('summarize')}
             >
               <div className="flex items-center gap-2">
-                <FileText size={14} className="text-blue-400" />
+                <FileText size={14} className="text-zinc-300" />
                 <div>
                   <div className="font-semibold text-zinc-300">Summarize Note</div>
                   <div className="text-[10px] text-zinc-400">Generate executive summary</div>

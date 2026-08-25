@@ -18,12 +18,12 @@
   --text-main: #e4e4e7;
   --text-muted: #8b8b96;
   --text-active: #ffffff;
-  --accent-lime: #3b82f6;
-  --accent-lime-hover: #60a5fa;
+  --accent-lime: #ffffff;
+  --accent-lime-hover: #f4f4f5;
   --accent-purple: #8b5cf6;
   --accent-purple-hover: #a78bfa;
-  --accent-color: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-color: #ffffff;
+  --accent-glow: rgba(255, 255, 255, 0.12);
   --success-color: #10b981;
   --danger-color: #ef4444;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -920,6 +920,19 @@ body {
   background: rgba(255, 255, 255, 0.08);
   color: #f4f4f5;
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-toggle-bar-btn.active {
+  background: #1c1c24;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.sidebar-toggle-bar-btn.active:hover {
+  background: #24242e;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .sidebar-toggle-bar-btn:active {
@@ -2728,16 +2741,16 @@ body {
 
 .file-badge.ts,
 .file-badge.ts-config {
-  background: #3b82f6;
+  background: #3f3f46;
   color: #bfbfc7;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
 .file-badge.tsx {
-  background: #0284c7;
+  background: #52525b;
   color: #bfbfc7;
   font-size: 8px;
-  box-shadow: 0 0 8px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
 .file-badge.js,
@@ -2795,7 +2808,7 @@ body {
 
 .file-badge.c-lang,
 .file-badge.cpp {
-  background: #2563eb;
+  background: #3f3f46;
   color: #bfbfc7;
   font-size: 8px;
 }
@@ -2812,7 +2825,7 @@ body {
 }
 
 .file-badge.docker {
-  background: #0284c7;
+  background: #3f3f46;
   font-size: 11px;
 }
 
@@ -4545,6 +4558,19 @@ code.inline-code {
   z-index: 1000;
 }
 
+.notifications-dropdown-menu {
+  right: 0;
+  left: auto;
+  width: 320px;
+  max-height: 480px;
+  z-index: 1000;
+}
+
+.help-dropdown-menu {
+  width: 290px;
+  z-index: 1000;
+}
+
 .widgets-dropdown-header {
   display: flex;
   align-items: center;
@@ -4695,7 +4721,7 @@ code.inline-code {
 }
 
 .page-actions-search-wrapper:focus-within {
-  border-color: #3b82f6;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .page-actions-search-input {
@@ -4737,8 +4763,8 @@ code.inline-code {
 }
 
 .font-choice-card.active {
-  border-color: rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .font-choice-card .font-preview {
@@ -4750,7 +4776,7 @@ code.inline-code {
 }
 
 .font-choice-card.active .font-preview {
-  color: #3b82f6;
+  color: #ffffff;
 }
 
 .font-choice-card .font-label {
@@ -4824,7 +4850,7 @@ code.inline-code {
 }
 
 .page-action-switch.active {
-  background: #3b82f6;
+  background: #ffffff;
 }
 
 .page-action-switch .switch-knob {
@@ -4840,6 +4866,7 @@ code.inline-code {
 
 .page-action-switch.active .switch-knob {
   transform: translateX(12px);
+  background: #121215;
 }
 
 /* Font Chooser Submenu */
@@ -4902,8 +4929,8 @@ code.inline-code {
 }
 
 .font-chooser-item.active {
-  background: rgba(59, 130, 246, 0.12);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 /* ====== TEXT CUSTOMISATION SUBVIEW ====== */
@@ -4964,9 +4991,9 @@ code.inline-code {
 }
 
 .custom-pill-btn.active {
-  background: rgba(59, 130, 246, 0.16);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -4999,9 +5026,9 @@ code.inline-code {
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #e4e4e7;
   border: 2px solid #18181b;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition:
     transform 0.12s ease,
@@ -5010,16 +5037,16 @@ code.inline-code {
 
 .custom-range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  background: #60a5fa;
+  background: #ffffff;
 }
 
 .custom-range-slider::-moz-range-thumb {
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #e4e4e7;
   border: 2px solid #18181b;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
   cursor: pointer;
 }
 
@@ -5036,7 +5063,7 @@ code.inline-code {
 }
 
 .custom-num-input-wrap:focus-within {
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .custom-num-input {
@@ -6401,7 +6428,7 @@ code.inline-code {
   position: absolute;
   top: -6px;
   right: -8px;
-  background-color: #3b82f6;
+  background-color: #3f3f46;
   color: #ffffff;
   font-size: 9px;
   font-weight: 700;
@@ -6697,29 +6724,6 @@ code.inline-code {
   overflow: hidden !important;
 }
 
-/* Sidebar Toggle in Tabs / Breadcrumbs Bar */
-.sidebar-toggle-bar-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: transparent;
-  color: #a1a1aa;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.sidebar-toggle-bar-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
 .rail-brand-btn {
   background: transparent;
   border: none;
@@ -6781,8 +6785,8 @@ code.inline-code {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
 }
 
 /* ==============================================================================
@@ -6795,22 +6799,42 @@ code.inline-code {
 }
 
 .sidebar-header-icon-btn {
-  width: 26px;
-  height: 26px;
+  width: 31px;
+  height: 31px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   color: #a1a1aa;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
 }
 
 .sidebar-header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
   color: #ffffff;
+}
+
+.sidebar-header-icon-btn.active {
+  background: #202026;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-header-icon-btn.active:hover {
+  background: #272730;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.sidebar-header-icon-btn:active {
+  transform: scale(0.95);
 }
 
 .sidebar-quick-add-menu {
@@ -6851,18 +6875,18 @@ code.inline-code {
 }
 
 .sidebar-search-pill {
-  background: #17171b;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9999px;
-  padding: 0 12px;
-  height: 32px;
+  background: #17171c;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 30px;
   transition: all 0.15s ease;
 }
 
 .sidebar-search-pill:focus-within {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: #1c1c21;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: #1c1c22;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04);
 }
 
 .sidebar-search-input-field {
@@ -6963,8 +6987,8 @@ code.inline-code {
 }
 
 .sidebar-tag-item.active {
-  background: rgba(59, 130, 246, 0.14);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .sidebar-tag-name {
@@ -7083,8 +7107,8 @@ code.inline-code {
 }
 
 .hub-popover-item.active {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -7529,8 +7553,8 @@ code.inline-code {
 }
 
 .hub-modal-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
 .hub-modal-btn {
@@ -7554,12 +7578,12 @@ code.inline-code {
 }
 
 .hub-modal-btn.confirm {
-  background: #3b82f6;
-  border: 1px solid #3b82f6;
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  color: #0f0f11;
   font-weight: 600;
 }
 
 .hub-modal-btn.confirm:hover {
-  background: #2563eb;
+  background: #e4e4e7;
 }

@@ -337,17 +337,6 @@ export default function App(): React.JSX.Element {
     })
   }, [])
 
-  const handleTogglePluginsView = useCallback(() => {
-    if (sidebarCollapsed) {
-      setSidebarCollapsed(false)
-      setSidebarView('plugins')
-    } else if (sidebarView === 'plugins') {
-      setSidebarView('explorer')
-    } else {
-      setSidebarView('plugins')
-    }
-  }, [sidebarCollapsed, sidebarView])
-
   const handleToggleSearch = useCallback(() => {
     if (sidebarCollapsed) {
       setSidebarCollapsed(false)
@@ -672,11 +661,11 @@ export default function App(): React.JSX.Element {
     h2 { font-size: 1.6em; border-bottom: 1px solid #27272a; padding-bottom: 0.3em; }
     h3 { font-size: 1.3em; }
     p { margin-bottom: 1em; }
-    a { color: #3b82f6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a { color: #f4f4f5; text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: #ffffff; }
     code { background: #27272a; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
     pre { background: #27272a; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 1em 0; }
-    blockquote { border-left: 4px solid #3b82f6; margin: 1em 0; padding: 0.5em 1em; color: #a1a1aa; background: #202023; border-radius: 0 4px 4px 0; }
+    blockquote { border-left: 3px solid #71717a; margin: 1em 0; padding: 0.5em 1em; color: #a1a1aa; background: #202023; border-radius: 0 4px 4px 0; }
     ul, ol { padding-left: 2em; margin-bottom: 1em; }
     li { margin-bottom: 0.3em; }
     hr { border: none; border-top: 1px solid #27272a; margin: 2em 0; }
@@ -887,12 +876,8 @@ export default function App(): React.JSX.Element {
         viewMode={viewMode}
         onToggleViewMode={(): void => setViewMode((m) => (m === 'graph' ? 'editor' : 'graph'))}
         setViewMode={setViewMode}
-        sidebarView={sidebarView}
-        sidebarCollapsed={effectiveSidebarCollapsed}
-        onTogglePluginsView={handleTogglePluginsView}
         onSwitchToHome={handleSwitchToHome}
         onSwitchToFiles={handleSwitchToFiles}
-        enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
         showTabs={showTabs}
         onToggleTabs={(): void => setShowTabs((p) => !p)}
         showRightSidebar={showRightSidebar}

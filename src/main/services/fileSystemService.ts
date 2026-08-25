@@ -144,7 +144,7 @@ export const config: OinkWorkspaceConfig = {
   version: '1.0.0',
   theme: {
     mode: 'dark',
-    accentColor: '#3b82f6',
+    accentColor: '#ffffff',
     background: '#18181b',
     surface: '#202023',
     sidebarBg: '#131316',

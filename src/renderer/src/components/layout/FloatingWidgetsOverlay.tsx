@@ -113,7 +113,7 @@ function FloatingWidgetsOverlayComponent({
         <FloatingWindow
           id="terminal"
           title="Quick Terminal"
-          icon={<Terminal size={13} fill="currentColor" className="text-blue-400" />}
+          icon={<Terminal size={13} fill="currentColor" className="text-emerald-400" />}
           initialPos={{
             x: widgetPositions.terminal?.x ?? Math.max(260, window.innerWidth - 480),
             y: widgetPositions.terminal?.y ?? Math.max(100, window.innerHeight - 270)

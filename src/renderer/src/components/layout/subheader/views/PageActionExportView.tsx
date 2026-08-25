@@ -45,7 +45,7 @@ function PageActionExportViewComponent({
               }}
             >
               <div className="page-action-left">
-                <FileCode size={14} className="text-blue-400 shrink-0" />
+                <FileCode size={14} className="text-zinc-300 shrink-0" />
                 <div className="flex flex-col">
                   <span className="page-action-title">Markdown</span>
                   <span className="text-[10px] text-zinc-500">Export as .md file</span>

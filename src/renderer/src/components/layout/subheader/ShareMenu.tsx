@@ -94,7 +94,7 @@ function ShareMenu({ activeFilePath, onCopyLink }: ShareMenuProps): React.JSX.El
               }}
             >
               <div className="flex items-center gap-2.5">
-                <UserPlus size={14} className="text-blue-400 shrink-0" />
+                <UserPlus size={14} className="text-zinc-300 shrink-0" />
                 <div className="flex flex-col">
                   <span className="share-item-title">Invite Collaborators</span>
                   <span className="share-item-desc">Add team members with edit access</span>

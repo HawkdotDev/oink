@@ -12,9 +12,9 @@ const gradientPresets = [
     name: 'Monochrome Charcoal',
     style: 'linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)'
   },
-  { name: 'Midnight Ocean', style: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)' },
+  { name: 'Obsidian Amber', style: 'linear-gradient(135deg, #1c1917, #292524, #451a03)' },
   { name: 'Emerald Forest', style: 'linear-gradient(135deg, #064e3b, #022c22, #0f172a)' },
-  { name: 'Slate Minimal', style: 'linear-gradient(135deg, #334155, #1e293b, #0f172a)' },
+  { name: 'Slate Minimal', style: 'linear-gradient(135deg, #27272a, #18181b, #09090b)' },
   { name: 'Dark Metallic', style: 'linear-gradient(135deg, #27272a, #3f3f46, #18181b)' },
   { name: 'Solar Flare', style: 'linear-gradient(135deg, #7c2d12, #9a3412, #451a03)' }
 ]

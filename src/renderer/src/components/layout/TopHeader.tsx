@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Minus, Square, X, Bell, Settings, FileText, Network, Blocks, Home } from 'lucide-react'
+import { Minus, Square, X, Settings, FileText, Network, Home } from 'lucide-react'
 import oinkLogo from '../../assets/logo.png'
 import { ViewMode, WidgetState } from '../../types'
 import { APP_VERSION } from '../../utils/version'
 import WidgetsMenu from './subheader/WidgetsMenu'
+import HelpMenu from './subheader/HelpMenu'
+import NotificationsMenu from './subheader/NotificationsMenu'
 import ViewModeMenu from './subheader/ViewModeMenu'
 
 interface TopHeaderProps {
@@ -11,12 +13,8 @@ interface TopHeaderProps {
   viewMode: ViewMode
   onToggleViewMode: () => void
   setViewMode?: (mode: ViewMode) => void
-  sidebarView?: 'explorer' | 'search' | 'plugins'
-  sidebarCollapsed?: boolean
-  onTogglePluginsView?: () => void
   onSwitchToHome?: () => void
   onSwitchToFiles?: () => void
-  enabledPluginsCount?: number
   showTabs?: boolean
   onToggleTabs?: () => void
   showRightSidebar: boolean
@@ -42,12 +40,8 @@ function TopHeader({
   viewMode,
   onToggleViewMode,
   setViewMode,
-  sidebarView = 'explorer',
-  sidebarCollapsed = false,
-  onTogglePluginsView,
   onSwitchToHome,
   onSwitchToFiles,
-  enabledPluginsCount = 0,
   showTabs = true,
   onToggleTabs,
   showRightSidebar,
@@ -209,27 +203,7 @@ function TopHeader({
             onToggleOnlyThisFile={onToggleOnlyThisFile}
           />
 
-          {/* 4. Plugins Button */}
-          {onTogglePluginsView && (
-            <button
-              className={`action-pill-btn ${sidebarView === 'plugins' && !sidebarCollapsed ? 'active' : ''}`}
-              onClick={onTogglePluginsView}
-              title="Toggle Plugins & Extensions (replaces File View)"
-            >
-              <Blocks
-                size={13}
-                className={sidebarView === 'plugins' && !sidebarCollapsed ? 'text-zinc-200' : ''}
-              />
-              <span>Plugins</span>
-              {enabledPluginsCount !== undefined && enabledPluginsCount > 0 && (
-                <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono">
-                  {enabledPluginsCount}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* 6. Floating Widgets Dropdown */}
+          {/* Floating Widgets Dropdown */}
           <WidgetsMenu
             widgetState={widgetState}
             onToggleWidget={onToggleWidget}
@@ -237,6 +211,9 @@ function TopHeader({
             autoSaveEnabled={autoSaveEnabled}
             onToggleAutoSave={onToggleAutoSave}
           />
+
+          {/* Help & Documentation Menu */}
+          <HelpMenu onOpenSettings={onOpenSettings} />
         </div>
       </div>
 
@@ -244,16 +221,8 @@ function TopHeader({
       <div className="top-header-right flex items-center gap-2">
         {/* Squircle Tool Buttons Group */}
         <div className="header-tool-cluster">
-          {/* Notifications Icon Button */}
-          <button
-            type="button"
-            className="header-action-btn relative"
-            onClick={(): void => alert('Notifications: All workspace systems operational.')}
-            title="Notifications"
-          >
-            <Bell size={13} />
-            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-zinc-400" />
-          </button>
+          {/* Notifications Dropdown */}
+          <NotificationsMenu />
 
           {/* Settings Icon Button */}
           <button
