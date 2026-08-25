@@ -942,6 +942,8 @@ export default function App(): React.JSX.Element {
         <ActivityRail
           activeTab={railTab}
           onSelectTab={handleSelectRailTab}
+          sidebarCollapsed={effectiveSidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
           onOpenSettings={(): void => setShowSettingsModal(true)}
           enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
           onToggleSearch={(): void =>

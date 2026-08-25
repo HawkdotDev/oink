@@ -6,7 +6,9 @@ import {
   Blocks,
   Settings,
   ArrowLeftRight,
-  Boxes
+  Boxes,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react'
 
 export type ActivityRailTab = 'home' | 'explorer' | 'graph' | 'plugins' | 'search'
@@ -17,6 +19,8 @@ interface ActivityRailProps {
   onOpenSettings: () => void
   enabledPluginsCount?: number
   onToggleSearch?: () => void
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
 }
 
 function ActivityRail({
@@ -24,7 +28,9 @@ function ActivityRail({
   onSelectTab,
   onOpenSettings,
   enabledPluginsCount = 0,
-  onToggleSearch
+  onToggleSearch,
+  sidebarCollapsed = false,
+  onToggleSidebar
 }: ActivityRailProps): React.JSX.Element {
   return (
     <nav className="activity-rail select-none flex flex-col items-center justify-between py-3">
@@ -102,8 +108,23 @@ function ActivityRail({
         </div>
       </div>
 
-      {/* Bottom Group: Settings */}
+      {/* Bottom Group: Sidebar Toggle & Settings */}
       <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            className="rail-nav-item"
+            onClick={onToggleSidebar}
+            title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={15} strokeWidth={1.8} />
+            ) : (
+              <PanelLeftClose size={15} strokeWidth={1.8} />
+            )}
+          </button>
+        )}
+
         <button
           type="button"
           className="rail-nav-item"
