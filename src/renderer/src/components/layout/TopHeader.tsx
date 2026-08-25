@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Minus, Square, X, Bell, Settings, FileText, Network, Blocks } from 'lucide-react'
 import oinkLogo from '../../assets/logo.png'
 import { ViewMode, WidgetState } from '../../types'
+import { APP_VERSION } from '../../utils/version'
 import WidgetsMenu from './subheader/WidgetsMenu'
 import ViewModeMenu from './subheader/ViewModeMenu'
 
@@ -122,7 +123,7 @@ function TopHeader({
               <div className="p-2 flex items-center justify-between text-zinc-500">
                 <span className="text-xs font-semibold text-zinc-200">Oink</span>
                 <span className="text-zinc-600 text-xs">|</span>
-                <span className="text-xs text-zinc-400 font-mono">v0.1.0</span>
+                <span className="text-xs text-zinc-400 font-mono">v{APP_VERSION}</span>
               </div>
             </div>
           )}

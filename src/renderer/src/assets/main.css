@@ -943,9 +943,11 @@ body {
 .subheader-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   height: 22px;
-  padding: 0 8px;
+  min-width: 24px;
+  padding: 0 6px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 2px;

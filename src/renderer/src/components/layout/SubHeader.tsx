@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { X, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { X, PanelLeftClose, PanelLeftOpen, Menu, Route, Files, EyeOff } from 'lucide-react'
 import ShareMenu from './subheader/ShareMenu'
 import PageActionsMenu from './subheader/PageActionsMenu'
 import { StatusStatsConfig, OpenFileInfo } from '../../types'
@@ -7,6 +7,8 @@ import { ProfessionalFileIcon } from '../../utils/fileIconUtils'
 import { getPathKey, normalizePath } from '../../utils/pathUtils'
 
 interface SubHeaderProps {
+  activityRailCollapsed?: boolean
+  onToggleActivityRail?: () => void
   sidebarCollapsed?: boolean
   onToggleSidebar?: () => void
   onSidebarHoverEnter?: () => void
@@ -79,6 +81,8 @@ function formatRelativeEditedTime(timestamp?: number | null): string {
 }
 
 function SubHeader({
+  activityRailCollapsed = false,
+  onToggleActivityRail,
   sidebarCollapsed = false,
   onToggleSidebar,
   onSidebarHoverEnter,
@@ -160,13 +164,44 @@ function SubHeader({
     return formatRelativeEditedTime(lastEditedTime)
   }, [lastEditedTime, tick])
 
-  const [activeSubTab, setActiveSubTab] = useState<'breadcrumbs' | 'tabs'>('breadcrumbs')
+  const [activeSubTab, setActiveSubTab] = useState<'none' | 'breadcrumbs' | 'tabs'>(() => {
+    try {
+      const saved = localStorage.getItem('oink_active_subtab')
+      if (saved === 'none' || saved === 'breadcrumbs' || saved === 'tabs') {
+        return saved
+      }
+    } catch {
+      // ignore
+    }
+    return 'breadcrumbs'
+  })
+
+  const handleSubTabChange = (tab: 'none' | 'breadcrumbs' | 'tabs'): void => {
+    setActiveSubTab(tab)
+    try {
+      localStorage.setItem('oink_active_subtab', tab)
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <div className="app-actions-bar select-none">
       {/* Left Application Brand Logo & Navigation Breadcrumbs / File Tabs */}
-      <div className="actions-bar-left flex items-center gap-2 overflow-hidden">
-        {/* Open / Close Sidebar Button in Tabs / Breadcrumbs Bar */}
+      <div className="actions-bar-left flex items-center gap-1.5 overflow-hidden">
+        {/* Toggle Activity Rail Button */}
+        {onToggleActivityRail && (
+          <button
+            type="button"
+            className={`sidebar-toggle-bar-btn ${activityRailCollapsed ? 'opacity-65' : ''}`}
+            onClick={onToggleActivityRail}
+            title={activityRailCollapsed ? 'Show Activity Rail' : 'Hide Activity Rail'}
+          >
+            <Menu size={15} strokeWidth={1.75} />
+          </button>
+        )}
+
+        {/* Open / Close Sidebar Button */}
         {onToggleSidebar && (
           <button
             type="button"
@@ -184,24 +219,32 @@ function SubHeader({
           </button>
         )}
 
-        {/* 2 Segmented Tabs determining display after divider */}
+        {/* 3 Segmented Tabs: None (EyeOff icon), Breadcrumbs (Route icon) and Tabs (Files icon) */}
         <div className="subheader-tab-cluster">
           <button
             type="button"
+            className={`subheader-tab-btn ${activeSubTab === 'none' ? 'active' : ''}`}
+            onClick={(): void => handleSubTabChange('none')}
+            title="None (Hide Breadcrumbs & Tabs)"
+          >
+            <EyeOff size={13} strokeWidth={1.8} />
+          </button>
+          <button
+            type="button"
             className={`subheader-tab-btn ${activeSubTab === 'breadcrumbs' ? 'active' : ''}`}
-            onClick={(): void => setActiveSubTab('breadcrumbs')}
+            onClick={(): void => handleSubTabChange('breadcrumbs')}
             title="Display Breadcrumbs Path"
           >
-            <span>Breadcrumbs</span>
+            <Route size={13} strokeWidth={1.8} />
           </button>
           <button
             type="button"
             className={`subheader-tab-btn ${activeSubTab === 'tabs' ? 'active' : ''}`}
-            onClick={(): void => setActiveSubTab('tabs')}
+            onClick={(): void => handleSubTabChange('tabs')}
             title="Display Open File Tabs"
           >
-            <span>Tabs</span>
-            {openFiles.length > 0 && (
+            <Files size={13} strokeWidth={1.8} />
+            {activeSubTab === 'tabs' && openFiles.length > 0 && (
               <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono ml-0.5">
                 {openFiles.length}
               </span>
@@ -209,10 +252,10 @@ function SubHeader({
           </button>
         </div>
 
-        {/* Vertical Divider */}
-        <div className="header-pipe-separator" />
+        {/* Vertical Divider (shown only when breadcrumbs or tabs are active) */}
+        {activeSubTab !== 'none' && <div className="header-pipe-separator" />}
 
-        {/* Dynamic Display: Either Breadcrumbs Path or Open Document Tabs */}
+        {/* Dynamic Display: Either Breadcrumbs Path, Open Document Tabs, or None */}
         {activeSubTab === 'tabs' ? (
           openFiles.length > 0 ? (
             <div className="subheader-file-tabs flex items-center overflow-x-auto flex-1 min-w-0">
@@ -264,7 +307,7 @@ function SubHeader({
           ) : (
             <div className="text-[11px] text-zinc-500 italic px-1">No open tabs</div>
           )
-        ) : (
+        ) : activeSubTab === 'breadcrumbs' ? (
           (activeFilePath || workspacePath) && (
             <div className="nav-breadcrumbs">
               {/* First Folder in Breadcrumbs (Workspace Root) */}
@@ -292,7 +335,7 @@ function SubHeader({
               })}
             </div>
           )
-        )}
+        ) : null}
       </div>
 
       {/* Right Toolbar Actions */}

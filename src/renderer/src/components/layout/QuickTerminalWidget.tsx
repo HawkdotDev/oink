@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Terminal as TerminalIcon, Play, Trash2, CheckCircle2 } from 'lucide-react'
+import { APP_VERSION } from '../../utils/version'
 
 interface QuickTerminalWidgetProps {
   workspacePath?: string | null
@@ -13,7 +14,7 @@ function QuickTerminalWidgetComponent({
   activeContent = ''
 }: QuickTerminalWidgetProps): React.JSX.Element {
   const [logs, setLogs] = useState<string[]>([
-    '[SYSTEM] Oink Desktop Engine v0.1.0 initialized',
+    `[SYSTEM] Oink Desktop Engine v${APP_VERSION} initialized`,
     '[WORKSPACE] ' + (workspacePath || 'No workspace opened'),
     '[STATUS] Ready. Type "help" for a list of available commands.'
   ])
@@ -124,7 +125,7 @@ function QuickTerminalWidgetComponent({
       case 'info':
         newLogs.push(
           'Oink Desktop Workspace',
-          '  Version: 0.1.0 (MIT License)',
+          `  Version: ${APP_VERSION} (MIT License)`,
           '  Runtime: Electron + React 19 + TypeScript',
           `  Active File: ${activeFileName || 'None'}`,
           `  Workspace: ${workspacePath || 'None'}`

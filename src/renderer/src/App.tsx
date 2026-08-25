@@ -882,8 +882,80 @@ export default function App(): React.JSX.Element {
         onToggleOnlyThisFile={handleToggleOnlyThisFile}
       />
 
-      {/* ====== 2. MAIN APP BODY CONTAINER ====== */}
-      <div className="app-body flex flex-1 min-h-0 min-w-0 overflow-hidden">
+      {/* ====== 2. SUB-HEADER ACTIONS & BREADCRUMBS / TABS BAR ====== */}
+      <SubHeader
+        activityRailCollapsed={activityRailCollapsed}
+        onToggleActivityRail={(): void => setActivityRailCollapsed((prev) => !prev)}
+        sidebarCollapsed={effectiveSidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
+        onSidebarHoverEnter={handleSidebarHoverEnter}
+        onSidebarHoverLeave={handleSidebarHoverLeave}
+        workspacePath={workspacePath}
+        workspaceName={workspaceName}
+        activeFilePath={activeFilePath}
+        openFiles={openFiles}
+        unsavedFiles={unsavedFiles}
+        fileIcons={fileIcons}
+        onTabSelect={handleTabSelect}
+        onTabClose={handleTabClose}
+        onOpenWorkspace={(): void => {
+          void onOpenWorkspaceClick()
+        }}
+        autoSaveEnabled={autoSaveEnabled}
+        onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
+        onExportHTML={(): void => {
+          void handleExportHTML()
+        }}
+        onExportText={(): void => {
+          void handleExportText()
+        }}
+        onExportMarkdown={(): void => {
+          void handleExportMarkdown()
+        }}
+        onCopyLink={handleCopyLink}
+        statsConfig={statsConfig}
+        onToggleStat={handleToggleStat}
+        showCover={effectiveShowCover}
+        showIcon={effectiveShowIcon}
+        showFileName={effectiveShowFileName}
+        isOnlyThisFile={isOnlyThisFile}
+        onToggleCover={handleToggleCover}
+        onToggleIcon={handleToggleIcon}
+        onToggleFileName={handleToggleFileName}
+        onToggleOnlyThisFile={handleToggleOnlyThisFile}
+        fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
+        editorFontFamily={editorFontFamily}
+        onChangeFontFamily={handleFontFamilyChange}
+        editorFontSize={editorFontSize}
+        onChangeFontSize={handleFontSizeChange}
+        editorLineHeight={editorLineHeight}
+        onChangeLineHeight={handleLineHeightChange}
+        editorLetterSpacing={editorLetterSpacing}
+        onChangeLetterSpacing={handleLetterSpacingChange}
+        editorParagraphSpacing={editorParagraphSpacing}
+        onChangeParagraphSpacing={handleParagraphSpacingChange}
+        editorFontWeight={editorFontWeight}
+        onChangeFontWeight={handleFontWeightChange}
+        editorTextAlign={editorTextAlign}
+        onChangeTextAlign={handleTextAlignChange}
+        isFullScreen={isFullScreen}
+        onToggleFullScreen={handleToggleFullScreen}
+        isPageLocked={isPageLocked}
+        onToggleLockPage={handleToggleLockPage}
+        onDuplicateFile={(): void => {
+          void handleDuplicateFile()
+        }}
+        onDeleteFile={(): void => {
+          void handleDeleteFile()
+        }}
+        onUndo={handleTriggerUndo}
+        onImport={(): void => {
+          void handleImportFile()
+        }}
+      />
+
+      {/* ====== 3. MAIN APP CONTENT CONTAINER (Below Tabs Bar) ====== */}
+      <div className="app-main flex flex-1 min-h-0 min-w-0 overflow-hidden">
         {/* Activity Rail Wrapper (Entire rail collapses to 0 width when hidden) */}
         <div
           className={`activity-rail-wrapper relative flex shrink-0 ${activityRailCollapsed ? 'rail-collapsed' : ''}`}
@@ -914,360 +986,277 @@ export default function App(): React.JSX.Element {
           </button>
         </div>
 
-        {/* App Content Column (SubHeader + Workspace) */}
-        <div className="app-content-column flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
-          {/* Sub-Header Actions & Breadcrumbs / Tabs Bar (Contains Sidebar Open/Close Button) */}
-          <SubHeader
-            sidebarCollapsed={effectiveSidebarCollapsed}
-            onToggleSidebar={handleToggleSidebar}
-            onSidebarHoverEnter={handleSidebarHoverEnter}
-            onSidebarHoverLeave={handleSidebarHoverLeave}
-            workspacePath={workspacePath}
-            workspaceName={workspaceName}
-            activeFilePath={activeFilePath}
-            openFiles={openFiles}
-            unsavedFiles={unsavedFiles}
-            fileIcons={fileIcons}
-            onTabSelect={handleTabSelect}
-            onTabClose={handleTabClose}
-            onOpenWorkspace={(): void => {
-              void onOpenWorkspaceClick()
-            }}
-            autoSaveEnabled={autoSaveEnabled}
-            onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
-            onExportHTML={(): void => {
-              void handleExportHTML()
-            }}
-            onExportText={(): void => {
-              void handleExportText()
-            }}
-            onExportMarkdown={(): void => {
-              void handleExportMarkdown()
-            }}
-            onCopyLink={handleCopyLink}
-            statsConfig={statsConfig}
-            onToggleStat={handleToggleStat}
-            showCover={effectiveShowCover}
-            showIcon={effectiveShowIcon}
-            showFileName={effectiveShowFileName}
-            isOnlyThisFile={isOnlyThisFile}
-            onToggleCover={handleToggleCover}
-            onToggleIcon={handleToggleIcon}
-            onToggleFileName={handleToggleFileName}
-            onToggleOnlyThisFile={handleToggleOnlyThisFile}
-            fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
-            editorFontFamily={editorFontFamily}
-            onChangeFontFamily={handleFontFamilyChange}
-            editorFontSize={editorFontSize}
-            onChangeFontSize={handleFontSizeChange}
-            editorLineHeight={editorLineHeight}
-            onChangeLineHeight={handleLineHeightChange}
-            editorLetterSpacing={editorLetterSpacing}
-            onChangeLetterSpacing={handleLetterSpacingChange}
-            editorParagraphSpacing={editorParagraphSpacing}
-            onChangeParagraphSpacing={handleParagraphSpacingChange}
-            editorFontWeight={editorFontWeight}
-            onChangeFontWeight={handleFontWeightChange}
-            editorTextAlign={editorTextAlign}
-            onChangeTextAlign={handleTextAlignChange}
-            isFullScreen={isFullScreen}
-            onToggleFullScreen={handleToggleFullScreen}
-            isPageLocked={isPageLocked}
-            onToggleLockPage={handleToggleLockPage}
-            onDuplicateFile={(): void => {
-              void handleDuplicateFile()
-            }}
-            onDeleteFile={(): void => {
-              void handleDeleteFile()
-            }}
-            onUndo={handleTriggerUndo}
-            onImport={(): void => {
-              void handleImportFile()
-            }}
-          />
+        {/* Sidebar Panel */}
+        <Sidebar
+          activeView={sidebarView}
+          sidebarCollapsed={effectiveSidebarCollapsed}
+          sidebarWidth={sidebarWidth}
+          isResizing={isResizingLeft}
+          workspacePath={workspacePath}
+          workspaceName={workspaceName}
+          workspaceIcons={workspaceIcons}
+          onSetWorkspaceIcon={handleSetWorkspaceIcon}
+          recentWorkspaces={recentWorkspaces}
+          activeFilePath={activeFilePath}
+          onFileSelect={(f): void => {
+            void handleFileSelect(f)
+          }}
+          onCreateFileAtRoot={(): void => {
+            void handleCreateFileAtRoot()
+          }}
+          onOpenWorkspace={(): void => {
+            void onOpenWorkspaceClick()
+          }}
+          onCloseWorkspace={onCloseWorkspaceClick}
+          onSwitchWorkspace={onSwitchWorkspaceClick}
+          onRemoveRecentWorkspace={handleRemoveRecentWorkspace}
+          onRenameWorkspace={onRenameWorkspaceClick}
+          fileIcons={fileIcons}
+          onMetadataLoaded={handleMetadataLoaded}
+          onStartResize={startLeftResize}
+          enabledPlugins={enabledPlugins}
+          onTogglePlugin={handleTogglePlugin}
+          onOpenSettings={(): void => setShowSettingsModal(true)}
+          onSwitchView={setSidebarView}
+          onMouseEnter={handleSidebarHoverEnter}
+          onMouseLeave={handleSidebarHoverLeave}
+          onToggleSidebar={handleToggleSidebar}
+        />
 
-          {/* Main App Workspace */}
-          <div className="app-main flex flex-1 min-h-0 overflow-hidden">
-            {/* Sidebar Panel */}
-            <Sidebar
-              activeView={sidebarView}
-              sidebarCollapsed={effectiveSidebarCollapsed}
-              sidebarWidth={sidebarWidth}
-              isResizing={isResizingLeft}
-              workspacePath={workspacePath}
-              workspaceName={workspaceName}
-              workspaceIcons={workspaceIcons}
-              onSetWorkspaceIcon={handleSetWorkspaceIcon}
-              recentWorkspaces={recentWorkspaces}
-              activeFilePath={activeFilePath}
-              onFileSelect={(f): void => {
-                void handleFileSelect(f)
-              }}
-              onCreateFileAtRoot={(): void => {
-                void handleCreateFileAtRoot()
-              }}
-              onOpenWorkspace={(): void => {
-                void onOpenWorkspaceClick()
-              }}
-              onCloseWorkspace={onCloseWorkspaceClick}
-              onSwitchWorkspace={onSwitchWorkspaceClick}
-              onRemoveRecentWorkspace={handleRemoveRecentWorkspace}
-              onRenameWorkspace={onRenameWorkspaceClick}
-              fileIcons={fileIcons}
-              onMetadataLoaded={handleMetadataLoaded}
-              onStartResize={startLeftResize}
-              enabledPlugins={enabledPlugins}
-              onTogglePlugin={handleTogglePlugin}
-              onOpenSettings={(): void => setShowSettingsModal(true)}
-              onSwitchView={setSidebarView}
-              onMouseEnter={handleSidebarHoverEnter}
-              onMouseLeave={handleSidebarHoverLeave}
-              onToggleSidebar={handleToggleSidebar}
-            />
+        {/* Editor Workspace & Split Area */}
+        <div className={`editor-workspace ${effectiveSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          {viewMode !== 'graph' && showTabs && (
+            <div className="editor-top-nav">
+              <TabBar
+                openFiles={openFiles}
+                activeFilePath={activeFilePath}
+                fileIcons={fileIcons}
+                workspacePath={workspacePath}
+                unsavedFiles={unsavedFiles}
+                onTabSelect={handleTabSelect}
+                onTabClose={handleTabClose}
+                onCreateFileAtRoot={(): void => {
+                  void handleCreateFileAtRoot()
+                }}
+              />
+            </div>
+          )}
 
-            {/* Editor Workspace & Split Area */}
-            <div
-              className={`editor-workspace ${effectiveSidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-            >
-              {viewMode !== 'graph' && showTabs && (
-                <div className="editor-top-nav">
-                  <TabBar
-                    openFiles={openFiles}
-                    activeFilePath={activeFilePath}
-                    fileIcons={fileIcons}
-                    workspacePath={workspacePath}
-                    unsavedFiles={unsavedFiles}
-                    onTabSelect={handleTabSelect}
-                    onTabClose={handleTabClose}
-                    onCreateFileAtRoot={(): void => {
-                      void handleCreateFileAtRoot()
-                    }}
-                  />
-                </div>
-              )}
-
-              <div className="editor-center-split">
-                {viewMode === 'graph' && workspacePath ? (
-                  <Suspense
-                    fallback={
-                      <div className="flex items-center justify-center flex-1 text-zinc-500 text-xs italic">
-                        Loading Knowledge Graph...
-                      </div>
-                    }
-                  >
-                    <GraphView
-                      workspacePath={workspacePath}
-                      onNodeClick={(nodeId): void => void handleFileSelect(nodeId)}
-                      onClose={(): void => setViewMode('editor')}
-                    />
-                  </Suspense>
-                ) : activeFilePath ? (
-                  <div className="editor-writing-viewport">
+          <div className="editor-center-split">
+            {viewMode === 'graph' && workspacePath ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center flex-1 text-zinc-500 text-xs italic">
+                    Loading Knowledge Graph...
+                  </div>
+                }
+              >
+                <GraphView
+                  workspacePath={workspacePath}
+                  onNodeClick={(nodeId): void => void handleFileSelect(nodeId)}
+                  onClose={(): void => setViewMode('editor')}
+                />
+              </Suspense>
+            ) : activeFilePath ? (
+              <div className="editor-writing-viewport">
+                <div
+                  className="editor-container"
+                  style={
+                    {
+                      '--editor-font-family': editorFontFamily,
+                      '--editor-font-size': `${editorFontSize}px`,
+                      '--editor-line-height': editorLineHeight,
+                      '--editor-letter-spacing': editorLetterSpacing,
+                      '--editor-paragraph-spacing': editorParagraphSpacing,
+                      '--editor-font-weight': editorFontWeight,
+                      '--editor-text-align': editorTextAlign
+                    } as React.CSSProperties
+                  }
+                >
+                  {/* Notion-style Full-Width Cover Banner */}
+                  {effectiveShowCover && activeFileBanner && (
                     <div
-                      className="editor-container"
+                      className="notion-cover-banner group"
                       style={
-                        {
-                          '--editor-font-family': editorFontFamily,
-                          '--editor-font-size': `${editorFontSize}px`,
-                          '--editor-line-height': editorLineHeight,
-                          '--editor-letter-spacing': editorLetterSpacing,
-                          '--editor-paragraph-spacing': editorParagraphSpacing,
-                          '--editor-font-weight': editorFontWeight,
-                          '--editor-text-align': editorTextAlign
-                        } as React.CSSProperties
+                        activeFileBanner.startsWith('linear-gradient')
+                          ? { background: activeFileBanner }
+                          : {
+                              backgroundImage: `url("${activeFileBanner}")`,
+                              backgroundPosition: 'center',
+                              backgroundSize: 'cover',
+                              backgroundRepeat: 'no-repeat'
+                            }
                       }
                     >
-                      {/* Notion-style Full-Width Cover Banner */}
-                      {effectiveShowCover && activeFileBanner && (
-                        <div
-                          className="notion-cover-banner group"
-                          style={
-                            activeFileBanner.startsWith('linear-gradient')
-                              ? { background: activeFileBanner }
-                              : {
-                                  backgroundImage: `url("${activeFileBanner}")`,
-                                  backgroundPosition: 'center',
-                                  backgroundSize: 'cover',
-                                  backgroundRepeat: 'no-repeat'
-                                }
-                          }
-                        >
-                          <div className="notion-cover-actions opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              className="notion-cover-btn"
-                              onClick={(): void => setShowBannerPicker((prev) => !prev)}
-                            >
-                              <Image size={12} strokeWidth={1.75} className="shrink-0 opacity-80" />
-                              <span>Change cover</span>
-                            </button>
-                            <button
-                              className="notion-cover-btn"
-                              onClick={(): void => {
-                                if (!activeFilePath) return
-                                const rel = getRelativePath(
-                                  activeFilePath,
-                                  workspacePath
-                                ).toLowerCase()
-                                setFileBanners((prev) => {
-                                  const updated = { ...prev }
-                                  delete updated[rel]
-                                  return updated
-                                })
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div
-                        className={`editor-wrapper ${effectiveShowCover && activeFileBanner ? 'has-cover' : ''}`}
-                      >
-                        {/* Notion-style Page Header */}
-                        <NotionPageHeader
-                          activeFilePath={activeFilePath}
-                          workspacePath={workspacePath}
-                          effectiveShowCover={effectiveShowCover}
-                          effectiveShowIcon={effectiveShowIcon}
-                          effectiveShowFileName={effectiveShowFileName}
-                          activeFileBanner={activeFileBanner}
-                          activeFileIcon={activeFileIcon}
-                          isPageLocked={isPageLocked}
-                          onSetFileIcon={handleSetFileIcon}
-                          onSetFileBanner={handleSetFileBanner}
-                          onRenameActiveFile={handleRenameActiveFile}
-                        />
-
-                        <BlockEditor
-                          value={fileContents[activeFilePath] || ''}
-                          readOnly={isPageLocked}
-                          workspacePath={workspacePath}
-                          maxUndoHistory={maxUndoHistory}
-                          onChange={(value): void => {
-                            if (activeFilePath) {
-                              const norm = normalizePath(activeFilePath)
-                              setFileContents((prev) => ({
-                                ...prev,
-                                [activeFilePath]: value,
-                                [norm]: value
-                              }))
-                            }
-                          }}
-                          activeFilePath={activeFilePath}
-                          onWikilinkClick={handleWikilinkClick}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Floating Stats & Autosave Pill */}
-                    <StatusBar
-                      activeFilePath={activeFilePath}
-                      activeFileContent={activeFilePath ? fileContents[activeFilePath] : undefined}
-                      stats={workerStats}
-                      autoSaveEnabled={autoSaveEnabled}
-                      activeUnsaved={activeUnsaved}
-                      statsConfig={statsConfig}
-                    />
-                  </div>
-                ) : (
-                  <WelcomeScreen
-                    workspacePath={workspacePath}
-                    workspaceName={workspaceName}
-                    onFileSelect={(f): void => {
-                      void handleFileSelect(f)
-                    }}
-                    onCreateFileAtRoot={(): void => {
-                      void handleCreateFileAtRoot()
-                    }}
-                    fileIcons={fileIcons}
-                  />
-                )}
-
-                {/* ====== FLOATING WIDGET WINDOWS OVERLAY ====== */}
-                <FloatingWidgetsOverlay
-                  viewMode={viewMode}
-                  widgetState={widgetState}
-                  widgetZIndexes={widgetZIndexes}
-                  widgetPositions={widgetPositions}
-                  activeFilePath={activeFilePath}
-                  workspacePath={workspacePath}
-                  fileContents={fileContents}
-                  headings={workerHeadings}
-                  onUpdateFileContent={(filePath, content): void => {
-                    setFileContents((prev) => ({ ...prev, [filePath]: content }))
-                  }}
-                  bringWidgetToFront={bringWidgetToFront}
-                  handleToggleWidget={handleToggleWidget}
-                  handleWidgetLayoutChange={handleWidgetLayoutChange}
-                  onInsertSnippet={(snippetText): void => {
-                    if (activeFilePath) {
-                      setFileContents((prev) => ({
-                        ...prev,
-                        [activeFilePath]: (prev[activeFilePath] || '') + '\n\n' + snippetText
-                      }))
-                    }
-                  }}
-                  onDockOutline={(): void => {
-                    setWidgetState((prev) => ({ ...prev, outline: false }))
-                    setShowRightSidebar(true)
-                  }}
-                />
-
-                {/* ====== RIGHT SIDEBAR PANEL (OUTLINE) ====== */}
-                {viewMode !== 'graph' && (
-                  <div
-                    className={`right-sidebar-panel ${!showRightSidebar ? 'is-collapsed' : ''} ${
-                      isResizingRight ? 'is-resizing' : ''
-                    }`}
-                    style={{ width: showRightSidebar ? rightSidebarWidth : 0 }}
-                  >
-                    <div
-                      className="sidebar-resize-handle sidebar-resize-handle-left"
-                      onMouseDown={startRightResize}
-                    />
-                    <div className="right-sidebar-header">
-                      <div className="flex items-center gap-2">
-                        <ListTree size={13} strokeWidth={1.75} className="text-zinc-400 shrink-0" />
-                        <span className="text-xs font-medium text-zinc-200">Outline</span>
-                      </div>
-                      <div className="right-sidebar-header-actions">
+                      <div className="notion-cover-actions opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          className="right-sidebar-btn"
+                          className="notion-cover-btn"
+                          onClick={(): void => setShowBannerPicker((prev) => !prev)}
+                        >
+                          <Image size={12} strokeWidth={1.75} className="shrink-0 opacity-80" />
+                          <span>Change cover</span>
+                        </button>
+                        <button
+                          className="notion-cover-btn"
                           onClick={(): void => {
-                            setShowRightSidebar(false)
-                            setWidgetState((prev) => ({ ...prev, outline: true }))
-                            bringWidgetToFront('outline')
+                            if (!activeFilePath) return
+                            const rel = getRelativePath(activeFilePath, workspacePath).toLowerCase()
+                            setFileBanners((prev) => {
+                              const updated = { ...prev }
+                              delete updated[rel]
+                              return updated
+                            })
                           }}
-                          title="Pop out to floating window"
                         >
-                          <AppWindow size={13} strokeWidth={1.75} />
-                        </button>
-                        <button
-                          className="right-sidebar-btn"
-                          onClick={(): void => setShowRightSidebar(false)}
-                          title="Close Outline"
-                        >
-                          <X size={13} strokeWidth={1.75} />
+                          Remove
                         </button>
                       </div>
                     </div>
-                    <div className="right-sidebar-content">
-                      {activeFilePath ? (
-                        <OutlineWidget
-                          content={fileContents[activeFilePath] || ''}
-                          headings={workerHeadings}
-                        />
-                      ) : (
-                        <div className="text-zinc-600 text-center py-8 text-[11px]">
-                          No file open
-                        </div>
-                      )}
-                    </div>
+                  )}
+
+                  <div
+                    className={`editor-wrapper ${effectiveShowCover && activeFileBanner ? 'has-cover' : ''}`}
+                  >
+                    {/* Notion-style Page Header */}
+                    <NotionPageHeader
+                      activeFilePath={activeFilePath}
+                      workspacePath={workspacePath}
+                      effectiveShowCover={effectiveShowCover}
+                      effectiveShowIcon={effectiveShowIcon}
+                      effectiveShowFileName={effectiveShowFileName}
+                      activeFileBanner={activeFileBanner}
+                      activeFileIcon={activeFileIcon}
+                      isPageLocked={isPageLocked}
+                      onSetFileIcon={handleSetFileIcon}
+                      onSetFileBanner={handleSetFileBanner}
+                      onRenameActiveFile={handleRenameActiveFile}
+                    />
+
+                    <BlockEditor
+                      value={fileContents[activeFilePath] || ''}
+                      readOnly={isPageLocked}
+                      workspacePath={workspacePath}
+                      maxUndoHistory={maxUndoHistory}
+                      onChange={(value): void => {
+                        if (activeFilePath) {
+                          const norm = normalizePath(activeFilePath)
+                          setFileContents((prev) => ({
+                            ...prev,
+                            [activeFilePath]: value,
+                            [norm]: value
+                          }))
+                        }
+                      }}
+                      activeFilePath={activeFilePath}
+                      onWikilinkClick={handleWikilinkClick}
+                    />
                   </div>
-                )}
+                </div>
+
+                {/* Floating Stats & Autosave Pill */}
+                <StatusBar
+                  activeFilePath={activeFilePath}
+                  activeFileContent={activeFilePath ? fileContents[activeFilePath] : undefined}
+                  stats={workerStats}
+                  autoSaveEnabled={autoSaveEnabled}
+                  activeUnsaved={activeUnsaved}
+                  statsConfig={statsConfig}
+                />
               </div>
-            </div>
+            ) : (
+              <WelcomeScreen
+                workspacePath={workspacePath}
+                workspaceName={workspaceName}
+                onFileSelect={(f): void => {
+                  void handleFileSelect(f)
+                }}
+                onCreateFileAtRoot={(): void => {
+                  void handleCreateFileAtRoot()
+                }}
+                fileIcons={fileIcons}
+              />
+            )}
+
+            {/* ====== FLOATING WIDGET WINDOWS OVERLAY ====== */}
+            <FloatingWidgetsOverlay
+              viewMode={viewMode}
+              widgetState={widgetState}
+              widgetZIndexes={widgetZIndexes}
+              widgetPositions={widgetPositions}
+              activeFilePath={activeFilePath}
+              workspacePath={workspacePath}
+              fileContents={fileContents}
+              headings={workerHeadings}
+              onUpdateFileContent={(filePath, content): void => {
+                setFileContents((prev) => ({ ...prev, [filePath]: content }))
+              }}
+              bringWidgetToFront={bringWidgetToFront}
+              handleToggleWidget={handleToggleWidget}
+              handleWidgetLayoutChange={handleWidgetLayoutChange}
+              onInsertSnippet={(snippetText): void => {
+                if (activeFilePath) {
+                  setFileContents((prev) => ({
+                    ...prev,
+                    [activeFilePath]: (prev[activeFilePath] || '') + '\n\n' + snippetText
+                  }))
+                }
+              }}
+              onDockOutline={(): void => {
+                setWidgetState((prev) => ({ ...prev, outline: false }))
+                setShowRightSidebar(true)
+              }}
+            />
+
+            {/* ====== RIGHT SIDEBAR PANEL (OUTLINE) ====== */}
+            {viewMode !== 'graph' && (
+              <div
+                className={`right-sidebar-panel ${!showRightSidebar ? 'is-collapsed' : ''} ${
+                  isResizingRight ? 'is-resizing' : ''
+                }`}
+                style={{ width: showRightSidebar ? rightSidebarWidth : 0 }}
+              >
+                <div
+                  className="sidebar-resize-handle sidebar-resize-handle-left"
+                  onMouseDown={startRightResize}
+                />
+                <div className="right-sidebar-header">
+                  <div className="flex items-center gap-2">
+                    <ListTree size={13} strokeWidth={1.75} className="text-zinc-400 shrink-0" />
+                    <span className="text-xs font-medium text-zinc-200">Outline</span>
+                  </div>
+                  <div className="right-sidebar-header-actions">
+                    <button
+                      className="right-sidebar-btn"
+                      onClick={(): void => {
+                        setShowRightSidebar(false)
+                        setWidgetState((prev) => ({ ...prev, outline: true }))
+                        bringWidgetToFront('outline')
+                      }}
+                      title="Pop out to floating window"
+                    >
+                      <AppWindow size={13} strokeWidth={1.75} />
+                    </button>
+                    <button
+                      className="right-sidebar-btn"
+                      onClick={(): void => setShowRightSidebar(false)}
+                      title="Close Outline"
+                    >
+                      <X size={13} strokeWidth={1.75} />
+                    </button>
+                  </div>
+                </div>
+                <div className="right-sidebar-content">
+                  {activeFilePath ? (
+                    <OutlineWidget
+                      content={fileContents[activeFilePath] || ''}
+                      headings={workerHeadings}
+                    />
+                  ) : (
+                    <div className="text-zinc-600 text-center py-8 text-[11px]">No file open</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

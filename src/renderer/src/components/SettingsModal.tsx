@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import PluginsWidget from './layout/PluginsWidget'
 import oinkLogo from '../assets/logo.png'
+import { APP_VERSION } from '../utils/version'
 
 interface UserSettings {
   // General
@@ -1044,7 +1045,7 @@ export default function SettingsModal({
                     <div>
                       <h4 className="text-sm font-semibold text-zinc-300">Oink Markdown IDE</h4>
                       <p className="text-xs text-zinc-400">
-                        Version 0.1.0 • Hybrid Brutalist &amp; Notion-Style Architecture
+                        Version {APP_VERSION} • Hybrid Brutalist &amp; Notion-Style Architecture
                       </p>
                     </div>
                   </div>

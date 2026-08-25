@@ -9,6 +9,7 @@ import { parseMarkdownMetadata, serializeMarkdownMetadata, stripFrontmatter } fr
 import { normalizePath } from './pathUtils'
 import { ensureWorkspaceConfigAsync } from './workspaceConfig'
 import { WorkerResultPayload } from '../workers/indexerWorker'
+import { APP_VERSION } from './version'
 
 export const OINK_METADATA_DIR = '.oink'
 export const OINK_METADATA_FILE = 'metadata.json'
@@ -223,7 +224,7 @@ class AsyncOinkMetadataEngine {
 
     const payload: StoredWorkspaceMetadataFile = {
       version: 1,
-      appVersion: '0.1.0',
+      appVersion: APP_VERSION,
       updatedAt: Date.now(),
       workspace: {
         ...this.store.workspace,
