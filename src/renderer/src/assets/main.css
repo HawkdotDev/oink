@@ -6678,14 +6678,13 @@ code.inline-code {
 /* Over-the-edge Open / Close Button */
 .activity-rail-edge-toggle {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: -8px;
-  width: 16px;
-  height: 38px;
-  border-radius: 9999px;
+  bottom: 24px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   background: #141417;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #a1a1aa;
   display: flex;
   align-items: center;
@@ -6694,7 +6693,7 @@ code.inline-code {
   z-index: 110;
   padding: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  opacity: 0.45;
+  opacity: 0.55;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -6703,17 +6702,16 @@ code.inline-code {
   opacity: 1;
   color: #ffffff;
   background: #202025;
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%) scale(1.08);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: scale(1.12);
 }
 
 .activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle {
-  right: -16px;
-  opacity: 0.85;
+  right: -10px;
+  opacity: 0.9;
   background: #18181b;
-  border-color: rgba(255, 255, 255, 0.2);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-color: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
 }
 
 .activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle:hover {
