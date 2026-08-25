@@ -909,9 +909,9 @@ export default function App(): React.JSX.Element {
             title={activityRailCollapsed ? 'Expand Activity Rail' : 'Collapse Activity Rail'}
           >
             {activityRailCollapsed ? (
-              <ChevronRight size={10} strokeWidth={2.2} />
+              <ChevronRight size={14} strokeWidth={2.4} />
             ) : (
-              <ChevronLeft size={10} strokeWidth={2.2} />
+              <ChevronLeft size={14} strokeWidth={2.4} />
             )}
           </button>
         </div>

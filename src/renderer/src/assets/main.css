@@ -6679,44 +6679,45 @@ code.inline-code {
 .activity-rail-edge-toggle {
   position: absolute;
   bottom: 24px;
-  right: -10px;
-  width: 20px;
-  height: 20px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: #141417;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #a1a1aa;
+  background: #1c1c21;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #e4e4e7;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 110;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  opacity: 0.55;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+  opacity: 1 !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .activity-rail-wrapper:hover .activity-rail-edge-toggle,
 .activity-rail-edge-toggle:hover {
-  opacity: 1;
+  opacity: 1 !important;
   color: #ffffff;
-  background: #202025;
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: scale(1.12);
+  background: #282830;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
 }
 
 .activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle {
-  right: -10px;
-  opacity: 0.9;
-  background: #18181b;
+  right: -15px;
+  opacity: 1 !important;
+  background: #1c1c21;
   border-color: rgba(255, 255, 255, 0.25);
   border-radius: 50%;
 }
 
 .activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle:hover {
-  opacity: 1;
-  background: #27272a;
+  opacity: 1 !important;
+  background: #282830;
 }
 
 .rail-brand-btn {

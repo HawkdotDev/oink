@@ -4,7 +4,6 @@ import {
   Layers,
   Network,
   Blocks,
-  Settings,
   ArrowLeftRight,
   PanelLeftClose,
   PanelLeftOpen
@@ -15,7 +14,7 @@ export type ActivityRailTab = 'home' | 'explorer' | 'graph' | 'plugins' | 'searc
 interface ActivityRailProps {
   activeTab: ActivityRailTab
   onSelectTab: (tab: ActivityRailTab) => void
-  onOpenSettings: () => void
+  onOpenSettings?: () => void
   enabledPluginsCount?: number
   onToggleSearch?: () => void
   sidebarCollapsed?: boolean
@@ -25,14 +24,13 @@ interface ActivityRailProps {
 function ActivityRail({
   activeTab,
   onSelectTab,
-  onOpenSettings,
   enabledPluginsCount = 0,
   onToggleSearch,
   sidebarCollapsed = false,
   onToggleSidebar
 }: ActivityRailProps): React.JSX.Element {
   return (
-    <nav className="activity-rail select-none flex flex-col items-center justify-between py-3">
+    <nav className="activity-rail select-none flex flex-col items-center py-3">
       {/* Top Group: Open / Close Sidebar Button & Core Views */}
       <div className="flex flex-col items-center gap-4 w-full">
         {/* Open / Close Sidebar Toggle (Replaced Oink Knowledge Base Button) */}
@@ -117,18 +115,6 @@ function ActivityRail({
             )}
           </button>
         </div>
-      </div>
-
-      {/* Bottom Group: Settings */}
-      <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
-        <button
-          type="button"
-          className="rail-nav-item"
-          onClick={onOpenSettings}
-          title="Preferences & Settings"
-        >
-          <Settings size={15} strokeWidth={1.8} />
-        </button>
       </div>
     </nav>
   )
