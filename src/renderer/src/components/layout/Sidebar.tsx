@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import SidebarHeader from './sidebar/SidebarHeader'
 import SidebarBody from './sidebar/SidebarBody'
 import type { SidebarViewMode } from './sidebar/SidebarBody'
@@ -32,6 +32,7 @@ interface SidebarProps {
   onSwitchView?: (view: SidebarViewMode) => void
   onMouseEnter?: () => void
   onMouseLeave?: () => void
+  onToggleSidebar?: () => void
 }
 
 function Sidebar({
@@ -60,8 +61,12 @@ function Sidebar({
   onOpenSettings,
   onSwitchView,
   onMouseEnter,
-  onMouseLeave
+  onMouseLeave,
+  onToggleSidebar
 }: SidebarProps): React.JSX.Element {
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [activeSubTab, setActiveSubTab] = useState<'folders' | 'tags'>('folders')
+
   return (
     <aside
       className={`sidebar ${sidebarCollapsed ? 'is-collapsed' : ''} ${isResizing ? 'is-resizing' : ''}`}
@@ -79,7 +84,7 @@ function Sidebar({
           minWidth: `${sidebarWidth}px`
         }}
       >
-        {/* Top Action Row: Header + Workspace Selector */}
+        {/* Top Action Row: Header + Workspace Selector + Search + SubTab Switcher */}
         <SidebarHeader
           activeView={activeView}
           workspacePath={workspacePath}
@@ -93,11 +98,18 @@ function Sidebar({
           onRemoveRecentWorkspace={onRemoveRecentWorkspace}
           onRenameWorkspace={onRenameWorkspace}
           onCreateFileAtRoot={onCreateFileAtRoot}
+          onToggleSidebar={onToggleSidebar}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeSubTab={activeSubTab}
+          onSelectSubTab={setActiveSubTab}
         />
 
-        {/* Main Body Area: Plugins, Tree, or Empty State */}
+        {/* Main Body Area: Tree or Tags View */}
         <SidebarBody
           activeView={activeView}
+          activeSubTab={activeSubTab}
+          searchQuery={searchQuery}
           workspacePath={workspacePath}
           activeFilePath={activeFilePath}
           onCreateFileAtRoot={onCreateFileAtRoot}

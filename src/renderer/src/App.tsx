@@ -8,6 +8,7 @@ import SettingsModal from './components/SettingsModal'
 import TopHeader from './components/layout/TopHeader'
 import SubHeader from './components/layout/SubHeader'
 import Sidebar from './components/layout/Sidebar'
+import ActivityRail, { ActivityRailTab } from './components/layout/ActivityRail'
 import TabBar from './components/layout/TabBar'
 import FloatingWidgetsOverlay from './components/layout/FloatingWidgetsOverlay'
 import OutlineWidget from './components/layout/OutlineWidget'
@@ -79,6 +80,7 @@ export default function App(): React.JSX.Element {
       return 'explorer'
     }
   })
+  const [railTab, setRailTab] = useState<ActivityRailTab>('home')
   const [enabledPlugins, setEnabledPlugins] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem('oink_enabled_plugins')
@@ -785,6 +787,29 @@ export default function App(): React.JSX.Element {
     saveState
   ])
 
+  const handleSelectRailTab = useCallback(
+    (tab: ActivityRailTab) => {
+      setRailTab(tab)
+      if (tab === 'home') {
+        setActiveFilePath(null)
+        setViewMode('editor')
+        setSidebarView('explorer')
+      } else if (tab === 'graph') {
+        setViewMode('graph')
+      } else if (tab === 'plugins') {
+        setViewMode('editor')
+        setSidebarView('plugins')
+      } else if (tab === 'search') {
+        setViewMode('editor')
+        setSidebarView('search')
+      } else if (tab === 'explorer') {
+        setViewMode('editor')
+        setSidebarView('explorer')
+      }
+    },
+    [setActiveFilePath]
+  )
+
   const activeUnsaved = activeFilePath
     ? !!unsavedFiles[normalizePath(activeFilePath)] ||
       fileContents[activeFilePath] !== originalFileContents[activeFilePath]
@@ -912,7 +937,18 @@ export default function App(): React.JSX.Element {
       />
 
       {/* ====== 3. MAIN APP CONTENT CONTAINER ====== */}
-      <div className="app-main">
+      <div className="app-main flex flex-1 min-h-0 overflow-hidden">
+        {/* Activity Rail on the far left */}
+        <ActivityRail
+          activeTab={railTab}
+          onSelectTab={handleSelectRailTab}
+          onOpenSettings={(): void => setShowSettingsModal(true)}
+          enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
+          onToggleSearch={(): void =>
+            setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
+          }
+        />
+
         {/* Sidebar Panel */}
         <Sidebar
           activeView={sidebarView}
@@ -947,6 +983,7 @@ export default function App(): React.JSX.Element {
           onSwitchView={setSidebarView}
           onMouseEnter={handleSidebarHoverEnter}
           onMouseLeave={handleSidebarHoverLeave}
+          onToggleSidebar={handleToggleSidebar}
         />
 
         {/* Editor Workspace & Split Area */}
@@ -1090,7 +1127,17 @@ export default function App(): React.JSX.Element {
                 />
               </div>
             ) : (
-              <WelcomeScreen workspacePath={workspacePath} />
+              <WelcomeScreen
+                workspacePath={workspacePath}
+                workspaceName={workspaceName}
+                onFileSelect={(f): void => {
+                  void handleFileSelect(f)
+                }}
+                onCreateFileAtRoot={(): void => {
+                  void handleCreateFileAtRoot()
+                }}
+                fileIcons={fileIcons}
+              />
             )}
 
             {/* ====== FLOATING WIDGET WINDOWS OVERLAY ====== */}

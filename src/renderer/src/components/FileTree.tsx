@@ -55,6 +55,7 @@ function FileTree({
   }, [expanded])
 
   const [contents, setContents] = useState<Record<string, FileNode[]>>({})
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({})
   const [creatingType, setCreatingType] = useState<{
     parent: string
     type: 'file' | 'folder'
@@ -202,6 +203,22 @@ function FileTree({
         ...prev,
         [key]: normalizedItems
       }))
+
+      // Populate child counts for directory items
+      const dirItems = normalizedItems.filter((i) => i.isDir)
+      if (dirItems.length > 0) {
+        void Promise.all(
+          dirItems.map(async (d) => {
+            try {
+              const children = await window.api.fs.readDirectory(d.path)
+              const count = children.filter((c) => !c.name.startsWith('.')).length
+              setFolderCounts((prev) => ({ ...prev, [getPathKey(d.path)]: count }))
+            } catch {
+              // ignore
+            }
+          })
+        )
+      }
 
       // Load metadata for markdown files concurrently in parallel
       const unreadItems = normalizedItems.filter(
@@ -540,33 +557,40 @@ function FileTree({
                 <span className="tree-node-label">{node.name}</span>
               )}
             </span>
-            <span className="tree-node-right opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                className="tree-node-action-btn"
-                onClick={(e): void => {
-                  e.stopPropagation()
-                  setCreatingType({ parent: node.path, type: 'file' })
-                  setExpanded((prev) => ({ ...prev, [nodeKey]: true }))
-                }}
-                title="Add page inside"
-              >
-                <Plus size={12} />
-              </button>
-              <button
-                className="tree-node-action-btn"
-                onClick={(e): void => {
-                  e.stopPropagation()
-                  handleContextMenu(e, node.path, true, parentPath)
-                }}
-                title="Folder Options"
-              >
-                <MoreHorizontal size={12} />
-              </button>
+            <span className="tree-node-right flex items-center">
+              <span className="tree-node-count-pill group-hover:hidden">
+                {folderCounts[nodeKey] !== undefined ? folderCounts[nodeKey] : children.length}
+              </span>
+              <div className="tree-node-hover-actions hidden group-hover:flex items-center gap-0.5">
+                <button
+                  type="button"
+                  className="tree-node-action-btn"
+                  onClick={(e): void => {
+                    e.stopPropagation()
+                    setCreatingType({ parent: node.path, type: 'file' })
+                    setExpanded((prev) => ({ ...prev, [nodeKey]: true }))
+                  }}
+                  title="Add page inside"
+                >
+                  <Plus size={12} />
+                </button>
+                <button
+                  type="button"
+                  className="tree-node-action-btn"
+                  onClick={(e): void => {
+                    e.stopPropagation()
+                    handleContextMenu(e, node.path, true, parentPath)
+                  }}
+                  title="Folder Options"
+                >
+                  <MoreHorizontal size={12} />
+                </button>
+              </div>
             </span>
           </div>
 
           {isNodeExpanded && (
-            <div className="tree-node-children">
+            <div className="tree-node-children tree-branch-container">
               {creatingType && getPathKey(creatingType.parent) === nodeKey && (
                 <form
                   onSubmit={(e): Promise<void> => handleCreateSubmit(e, node.path)}

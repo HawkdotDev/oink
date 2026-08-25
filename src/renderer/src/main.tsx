@@ -7,24 +7,47 @@ import App from './App'
 if (!window.api) {
   const mockFiles: Record<string, { path: string; name: string; isDir: boolean }[]> = {
     '/workspace': [
-      { path: '/workspace/images', name: 'images', isDir: true },
-      { path: '/workspace/tools', name: 'tools', isDir: true },
-      { path: '/workspace/third_party', name: 'third_party', isDir: true },
-      { path: '/workspace/sqlite3', name: 'sqlite3', isDir: true },
-      { path: '/workspace/team.css', name: 'team.css', isDir: false },
-      { path: '/workspace/main.html', name: 'main.html', isDir: false },
-      { path: '/workspace/ngrok.exe', name: 'ngrok.exe', isDir: false },
-      { path: '/workspace/product.json', name: 'product.json', isDir: false }
+      { path: '/workspace/General Knowledge', name: 'General Knowledge', isDir: true },
+      { path: '/workspace/Onboarding Design', name: 'Onboarding Design', isDir: true },
+      { path: '/workspace/Team Interviews', name: 'Team Interviews', isDir: true },
+      { path: '/workspace/Product-Roadmap.md', name: 'Product-Roadmap.md', isDir: false },
+      { path: '/workspace/Design-System.md', name: 'Design-System.md', isDir: false },
+      { path: '/workspace/Meeting-Notes.md', name: 'Meeting-Notes.md', isDir: false }
     ],
-    '/workspace/tools': [
-      { path: '/workspace/tools/mailer.php', name: 'mailer.php', isDir: false },
-      { path: '/workspace/tools/main.js', name: 'main.js', isDir: false },
-      { path: '/workspace/tools/script.py', name: 'script.py', isDir: false },
-      { path: '/workspace/tools/index.css', name: 'index.css', isDir: false }
+    '/workspace/General Knowledge': [
+      { path: '/workspace/General Knowledge/Onboarding', name: 'Onboarding', isDir: true },
+      { path: '/workspace/General Knowledge/Integrations', name: 'Integrations', isDir: true },
+      { path: '/workspace/General Knowledge/Documents', name: 'Documents', isDir: true },
+      { path: '/workspace/General Knowledge/Onboarding-Guide.md', name: 'Onboarding-Guide.md', isDir: false },
+      { path: '/workspace/General Knowledge/Product-Roadmap.md', name: 'Product-Roadmap.md', isDir: false },
+      { path: '/workspace/General Knowledge/Tech-Architecture.md', name: 'Tech-Architecture.md', isDir: false }
     ],
-    '/workspace/images': [],
-    '/workspace/third_party': [],
-    '/workspace/sqlite3': []
+    '/workspace/General Knowledge/Onboarding': [
+      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1', name: 'Subfolder 1', isDir: true },
+      { path: '/workspace/General Knowledge/Onboarding/Subfolder 2', name: 'Subfolder 2', isDir: true },
+      { path: '/workspace/General Knowledge/Onboarding/Welcome-Checklist.md', name: 'Welcome-Checklist.md', isDir: false },
+      { path: '/workspace/General Knowledge/Onboarding/Company-Handbook.md', name: 'Company-Handbook.md', isDir: false }
+    ],
+    '/workspace/General Knowledge/Onboarding/Subfolder 1': [
+      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Getting-Started.md', name: 'Getting-Started.md', isDir: false },
+      { path: '/workspace/General Knowledge/Onboarding/Subfolder 1/Security-Setup.md', name: 'Security-Setup.md', isDir: false }
+    ],
+    '/workspace/General Knowledge/Onboarding/Subfolder 2': [
+      { path: '/workspace/General Knowledge/Onboarding/Subfolder 2/API-Keys.md', name: 'API-Keys.md', isDir: false }
+    ],
+    '/workspace/General Knowledge/Integrations': [
+      { path: '/workspace/General Knowledge/Integrations/Slack-Webhook.md', name: 'Slack-Webhook.md', isDir: false },
+      { path: '/workspace/General Knowledge/Integrations/Github-Actions.md', name: 'Github-Actions.md', isDir: false }
+    ],
+    '/workspace/General Knowledge/Documents': [
+      { path: '/workspace/General Knowledge/Documents/RFC-001.md', name: 'RFC-001.md', isDir: false }
+    ],
+    '/workspace/Onboarding Design': [
+      { path: '/workspace/Onboarding Design/Figma-Specs.md', name: 'Figma-Specs.md', isDir: false }
+    ],
+    '/workspace/Team Interviews': [
+      { path: '/workspace/Team Interviews/Candidate-Evaluation.md', name: 'Candidate-Evaluation.md', isDir: false }
+    ]
   }
 
   // @ts-ignore - Browser fallback mock API when running outside Electron container
