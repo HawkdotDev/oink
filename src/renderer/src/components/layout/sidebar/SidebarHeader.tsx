@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, PanelLeftClose, Search, FolderPlus, FilePlus } from 'lucide-react'
+import { Plus, Search, FolderPlus, FilePlus } from 'lucide-react'
 import WorkspaceSelector from './WorkspaceSelector'
 import type { SidebarViewMode } from './SidebarBody'
 
@@ -35,7 +35,6 @@ function SidebarHeader({
   onRemoveRecentWorkspace,
   onRenameWorkspace,
   onCreateFileAtRoot,
-  onToggleSidebar,
   searchQuery = '',
   onSearchChange,
   activeSubTab = 'folders',
@@ -64,7 +63,7 @@ function SidebarHeader({
           onCreateFileAtRoot={onCreateFileAtRoot}
         />
 
-        {/* Right Header Buttons: + and [ ] */}
+        {/* Right Header Buttons: + */}
         <div className="flex items-center gap-1 shrink-0 relative">
           <button
             type="button"
@@ -74,17 +73,6 @@ function SidebarHeader({
           >
             <Plus size={15} strokeWidth={2} />
           </button>
-
-          {onToggleSidebar && (
-            <button
-              type="button"
-              className="sidebar-header-icon-btn"
-              onClick={onToggleSidebar}
-              title="Collapse sidebar (Ctrl+B)"
-            >
-              <PanelLeftClose size={15} strokeWidth={1.75} />
-            </button>
-          )}
 
           {/* Quick Create Dropdown Menu */}
           {showAddMenu && (
