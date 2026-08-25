@@ -5060,6 +5060,7 @@ code.inline-code {
 }
 
 .app-container.distraction-free-fullscreen .app-top-header,
+.app-container.distraction-free-fullscreen .activity-rail-wrapper,
 .app-container.distraction-free-fullscreen .activity-rail,
 .app-container.distraction-free-fullscreen .sidebar,
 .app-container.distraction-free-fullscreen .app-actions-bar,
@@ -6631,8 +6632,15 @@ code.inline-code {
 }
 
 /* ==============================================================================
-   ACTIVITY RAIL (Far-Left Navigation Dock)
+   ACTIVITY RAIL (Far-Left Navigation Dock & Over-The-Edge Toggle)
    ============================================================================== */
+.activity-rail-wrapper {
+  position: relative;
+  display: flex;
+  height: 100%;
+  z-index: 101;
+}
+
 .activity-rail {
   width: 44px;
   min-width: 44px;
@@ -6647,6 +6655,70 @@ code.inline-code {
   justify-content: space-between;
   padding: 10px 0 12px 0;
   user-select: none;
+  transition:
+    width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    min-width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    max-width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.15s ease,
+    padding 0.2s ease;
+}
+
+.activity-rail-wrapper.rail-collapsed .activity-rail {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  border-right: none !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Over-the-edge Open / Close Button */
+.activity-rail-edge-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -8px;
+  width: 16px;
+  height: 38px;
+  border-radius: 9999px;
+  background: #141417;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 110;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  opacity: 0.45;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.activity-rail-wrapper:hover .activity-rail-edge-toggle,
+.activity-rail-edge-toggle:hover {
+  opacity: 1;
+  color: #ffffff;
+  background: #202025;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle {
+  right: -16px;
+  opacity: 0.85;
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.activity-rail-wrapper.rail-collapsed .activity-rail-edge-toggle:hover {
+  opacity: 1;
+  background: #27272a;
 }
 
 .rail-brand-btn {

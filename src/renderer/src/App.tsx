@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
-import { AppWindow, ListTree, X, Minimize2, Image } from 'lucide-react'
+import { AppWindow, ListTree, X, Minimize2, Image, ChevronLeft, ChevronRight } from 'lucide-react'
 import BlockEditor from './components/BlockEditor'
 import BannerPicker from './components/BannerPicker'
 import NotionPageHeader from './components/editor/NotionPageHeader'
@@ -81,6 +81,22 @@ export default function App(): React.JSX.Element {
     }
   })
   const [railTab, setRailTab] = useState<ActivityRailTab>('home')
+  const [activityRailCollapsed, setActivityRailCollapsed] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('oink_activity_rail_collapsed')
+      return saved !== null ? saved === 'true' : false
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('oink_activity_rail_collapsed', String(activityRailCollapsed))
+    } catch {
+      // ignore
+    }
+  }, [activityRailCollapsed])
   const [enabledPlugins, setEnabledPlugins] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem('oink_enabled_plugins')
@@ -868,18 +884,37 @@ export default function App(): React.JSX.Element {
 
       {/* ====== 2. MAIN APP BODY CONTAINER ====== */}
       <div className="app-body flex flex-1 min-h-0 min-w-0 overflow-hidden">
-        {/* Activity Rail on the far left - spans from SubHeader/Tabs level down to window bottom */}
-        <ActivityRail
-          activeTab={railTab}
-          onSelectTab={handleSelectRailTab}
-          sidebarCollapsed={effectiveSidebarCollapsed}
-          onToggleSidebar={handleToggleSidebar}
-          onOpenSettings={(): void => setShowSettingsModal(true)}
-          enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
-          onToggleSearch={(): void =>
-            setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
-          }
-        />
+        {/* Activity Rail Wrapper with Over-the-edge Toggle Button */}
+        <div
+          className={`activity-rail-wrapper relative flex shrink-0 ${activityRailCollapsed ? 'rail-collapsed' : ''}`}
+        >
+          {/* Activity Rail on the far left - spans from SubHeader/Tabs level down to window bottom */}
+          <ActivityRail
+            activeTab={railTab}
+            onSelectTab={handleSelectRailTab}
+            sidebarCollapsed={effectiveSidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
+            onOpenSettings={(): void => setShowSettingsModal(true)}
+            enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
+            onToggleSearch={(): void =>
+              setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
+            }
+          />
+
+          {/* Over-the-edge Open / Close Button */}
+          <button
+            type="button"
+            className="activity-rail-edge-toggle"
+            onClick={(): void => setActivityRailCollapsed((prev) => !prev)}
+            title={activityRailCollapsed ? 'Expand Activity Rail' : 'Collapse Activity Rail'}
+          >
+            {activityRailCollapsed ? (
+              <ChevronRight size={10} strokeWidth={2.2} />
+            ) : (
+              <ChevronLeft size={10} strokeWidth={2.2} />
+            )}
+          </button>
+        </div>
 
         {/* App Content Column (SubHeader + Workspace) */}
         <div className="app-content-column flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
