@@ -38,12 +38,12 @@ function ActivityRail({
           title="Oink Knowledge Base"
         >
           <div className="rail-brand-icon-wrap">
-            <Boxes size={19} className="text-zinc-100 group-hover:scale-110 transition-transform" />
+            <Boxes size={16} className="text-zinc-100 group-hover:scale-110 transition-transform" />
           </div>
         </button>
 
         {/* Navigation Items */}
-        <div className="flex flex-col items-center gap-1.5 w-full px-2">
+        <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
           {/* Home / Hub */}
           <button
             type="button"
@@ -51,7 +51,7 @@ function ActivityRail({
             onClick={(): void => onSelectTab('home')}
             title="Knowledge Base Hub"
           >
-            <Home size={17} strokeWidth={1.8} />
+            <Home size={15} strokeWidth={1.8} />
           </button>
 
           {/* Database / Knowledge Base Explorer */}
@@ -61,7 +61,7 @@ function ActivityRail({
             onClick={(): void => onSelectTab('explorer')}
             title="Folders & Documents"
           >
-            <Layers size={17} strokeWidth={1.8} />
+            <Layers size={15} strokeWidth={1.8} />
           </button>
 
           {/* Sync / Switcher */}
@@ -74,7 +74,7 @@ function ActivityRail({
             }}
             title="Quick Switcher / Search (Ctrl+P)"
           >
-            <ArrowLeftRight size={16} strokeWidth={1.8} />
+            <ArrowLeftRight size={14} strokeWidth={1.8} />
           </button>
 
           {/* Knowledge Graph View */}
@@ -84,7 +84,7 @@ function ActivityRail({
             onClick={(): void => onSelectTab('graph')}
             title="Knowledge Graph"
           >
-            <Network size={17} strokeWidth={1.8} />
+            <Network size={15} strokeWidth={1.8} />
           </button>
 
           {/* Extensions / Plugins */}
@@ -94,7 +94,7 @@ function ActivityRail({
             onClick={(): void => onSelectTab('plugins')}
             title="Plugins & Extensions"
           >
-            <Blocks size={17} strokeWidth={1.8} />
+            <Blocks size={15} strokeWidth={1.8} />
             {enabledPluginsCount > 0 && (
               <span className="rail-badge-dot" title={`${enabledPluginsCount} active plugins`} />
             )}
@@ -103,14 +103,14 @@ function ActivityRail({
       </div>
 
       {/* Bottom Group: Settings */}
-      <div className="flex flex-col items-center gap-1.5 w-full px-2">
+      <div className="flex flex-col items-center gap-1.5 w-full px-1.5">
         <button
           type="button"
           className="rail-nav-item"
           onClick={onOpenSettings}
           title="Preferences & Settings"
         >
-          <Settings size={17} strokeWidth={1.8} />
+          <Settings size={15} strokeWidth={1.8} />
         </button>
       </div>
     </nav>

@@ -6633,9 +6633,9 @@ code.inline-code {
    ACTIVITY RAIL (Far-Left Navigation Dock)
    ============================================================================== */
 .activity-rail {
-  width: 52px;
-  min-width: 52px;
-  max-width: 52px;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
   height: 100%;
   background-color: #0b0b0d;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -6657,9 +6657,9 @@ code.inline-code {
 }
 
 .rail-brand-icon-wrap {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #242429 0%, #151518 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
@@ -6676,9 +6676,9 @@ code.inline-code {
 }
 
 .rail-nav-item {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6704,10 +6704,10 @@ code.inline-code {
 
 .rail-badge-dot {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 5px;
-  height: 5px;
+  top: 5px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: #3b82f6;
   box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
