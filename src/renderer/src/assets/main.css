@@ -5060,6 +5060,7 @@ code.inline-code {
 }
 
 .app-container.distraction-free-fullscreen .app-top-header,
+.app-container.distraction-free-fullscreen .activity-rail,
 .app-container.distraction-free-fullscreen .sidebar,
 .app-container.distraction-free-fullscreen .app-actions-bar,
 .app-container.distraction-free-fullscreen .editor-top-nav,

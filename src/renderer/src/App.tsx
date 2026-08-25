@@ -866,79 +866,9 @@ export default function App(): React.JSX.Element {
         onToggleOnlyThisFile={handleToggleOnlyThisFile}
       />
 
-      {/* ====== 2. SUB-HEADER ACTIONS & BREADCRUMBS BAR ====== */}
-      <SubHeader
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={handleToggleSidebar}
-        onSidebarHoverEnter={handleSidebarHoverEnter}
-        onSidebarHoverLeave={handleSidebarHoverLeave}
-        workspacePath={workspacePath}
-        workspaceName={workspaceName}
-        activeFilePath={activeFilePath}
-        openFiles={openFiles}
-        unsavedFiles={unsavedFiles}
-        fileIcons={fileIcons}
-        onTabSelect={handleTabSelect}
-        onTabClose={handleTabClose}
-        onOpenWorkspace={(): void => {
-          void onOpenWorkspaceClick()
-        }}
-        autoSaveEnabled={autoSaveEnabled}
-        onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
-        onExportHTML={(): void => {
-          void handleExportHTML()
-        }}
-        onExportText={(): void => {
-          void handleExportText()
-        }}
-        onExportMarkdown={(): void => {
-          void handleExportMarkdown()
-        }}
-        onCopyLink={handleCopyLink}
-        statsConfig={statsConfig}
-        onToggleStat={handleToggleStat}
-        showCover={effectiveShowCover}
-        showIcon={effectiveShowIcon}
-        showFileName={effectiveShowFileName}
-        isOnlyThisFile={isOnlyThisFile}
-        onToggleCover={handleToggleCover}
-        onToggleIcon={handleToggleIcon}
-        onToggleFileName={handleToggleFileName}
-        onToggleOnlyThisFile={handleToggleOnlyThisFile}
-        fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
-        editorFontFamily={editorFontFamily}
-        onChangeFontFamily={handleFontFamilyChange}
-        editorFontSize={editorFontSize}
-        onChangeFontSize={handleFontSizeChange}
-        editorLineHeight={editorLineHeight}
-        onChangeLineHeight={handleLineHeightChange}
-        editorLetterSpacing={editorLetterSpacing}
-        onChangeLetterSpacing={handleLetterSpacingChange}
-        editorParagraphSpacing={editorParagraphSpacing}
-        onChangeParagraphSpacing={handleParagraphSpacingChange}
-        editorFontWeight={editorFontWeight}
-        onChangeFontWeight={handleFontWeightChange}
-        editorTextAlign={editorTextAlign}
-        onChangeTextAlign={handleTextAlignChange}
-        isFullScreen={isFullScreen}
-        onToggleFullScreen={handleToggleFullScreen}
-        isPageLocked={isPageLocked}
-        onToggleLockPage={handleToggleLockPage}
-        onDuplicateFile={(): void => {
-          void handleDuplicateFile()
-        }}
-        onDeleteFile={(): void => {
-          void handleDeleteFile()
-        }}
-        onUndo={handleTriggerUndo}
-        onImport={(): void => {
-          void handleImportFile()
-        }}
-      />
-
-      {/* ====== 3. MAIN APP CONTENT CONTAINER ====== */}
-      <div className="app-main flex flex-1 min-h-0 overflow-hidden">
-        {/* Activity Rail on the far left */}
+      {/* ====== 2. MAIN APP BODY CONTAINER ====== */}
+      <div className="app-body flex flex-1 min-h-0 min-w-0 overflow-hidden">
+        {/* Activity Rail on the far left - spans from SubHeader/Tabs level down to window bottom */}
         <ActivityRail
           activeTab={railTab}
           onSelectTab={handleSelectRailTab}
@@ -951,8 +881,82 @@ export default function App(): React.JSX.Element {
           }
         />
 
-        {/* Sidebar Panel */}
-        <Sidebar
+        {/* App Content Column (SubHeader + Workspace) */}
+        <div className="app-content-column flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
+          {/* Sub-Header Actions & Breadcrumbs / Tabs Bar */}
+          <SubHeader
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
+            onSidebarHoverEnter={handleSidebarHoverEnter}
+            onSidebarHoverLeave={handleSidebarHoverLeave}
+            workspacePath={workspacePath}
+            workspaceName={workspaceName}
+            activeFilePath={activeFilePath}
+            openFiles={openFiles}
+            unsavedFiles={unsavedFiles}
+            fileIcons={fileIcons}
+            onTabSelect={handleTabSelect}
+            onTabClose={handleTabClose}
+            onOpenWorkspace={(): void => {
+              void onOpenWorkspaceClick()
+            }}
+            autoSaveEnabled={autoSaveEnabled}
+            onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
+            onExportHTML={(): void => {
+              void handleExportHTML()
+            }}
+            onExportText={(): void => {
+              void handleExportText()
+            }}
+            onExportMarkdown={(): void => {
+              void handleExportMarkdown()
+            }}
+            onCopyLink={handleCopyLink}
+            statsConfig={statsConfig}
+            onToggleStat={handleToggleStat}
+            showCover={effectiveShowCover}
+            showIcon={effectiveShowIcon}
+            showFileName={effectiveShowFileName}
+            isOnlyThisFile={isOnlyThisFile}
+            onToggleCover={handleToggleCover}
+            onToggleIcon={handleToggleIcon}
+            onToggleFileName={handleToggleFileName}
+            onToggleOnlyThisFile={handleToggleOnlyThisFile}
+            fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
+            editorFontFamily={editorFontFamily}
+            onChangeFontFamily={handleFontFamilyChange}
+            editorFontSize={editorFontSize}
+            onChangeFontSize={handleFontSizeChange}
+            editorLineHeight={editorLineHeight}
+            onChangeLineHeight={handleLineHeightChange}
+            editorLetterSpacing={editorLetterSpacing}
+            onChangeLetterSpacing={handleLetterSpacingChange}
+            editorParagraphSpacing={editorParagraphSpacing}
+            onChangeParagraphSpacing={handleParagraphSpacingChange}
+            editorFontWeight={editorFontWeight}
+            onChangeFontWeight={handleFontWeightChange}
+            editorTextAlign={editorTextAlign}
+            onChangeTextAlign={handleTextAlignChange}
+            isFullScreen={isFullScreen}
+            onToggleFullScreen={handleToggleFullScreen}
+            isPageLocked={isPageLocked}
+            onToggleLockPage={handleToggleLockPage}
+            onDuplicateFile={(): void => {
+              void handleDuplicateFile()
+            }}
+            onDeleteFile={(): void => {
+              void handleDeleteFile()
+            }}
+            onUndo={handleTriggerUndo}
+            onImport={(): void => {
+              void handleImportFile()
+            }}
+          />
+
+          {/* Main App Workspace */}
+          <div className="app-main flex flex-1 min-h-0 overflow-hidden">
+            {/* Sidebar Panel */}
+            <Sidebar
           activeView={sidebarView}
           sidebarCollapsed={effectiveSidebarCollapsed}
           sidebarWidth={sidebarWidth}
@@ -1225,6 +1229,8 @@ export default function App(): React.JSX.Element {
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
       {/* Popovers */}
       {showBannerPicker && (
