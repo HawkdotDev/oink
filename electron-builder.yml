@@ -42,8 +42,8 @@ asarUnpack:
 win:
   icon: build/icon.ico
   executableName: Oink
-  cscLink: build/oink-dev-cert.pfx
-  cscKeyPassword: oink-desktop-signing
+  signtoolOptions:
+    publisherName: HawkdotDev
   signAndEditExecutable: true
   target:
     - target: nsis

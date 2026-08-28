@@ -1,7 +1,7 @@
 {
   "name": "oink",
   "displayName": "Oink",
-  "desktopName": "oink",
+  "desktopName": "Oink",
   "version": "0.3.0",
   "description": "Local-first, hybrid block-markdown knowledge base and workspace for creators and developers.",
   "author": {
@@ -52,6 +52,7 @@
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
+    "build:win:signed": "npm run build && electron-builder --win -c.win.cscLink=build/oink-dev-cert.pfx -c.win.cscKeyPassword=oink-desktop-signing",
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
     "release": "electron-builder --publish always"
