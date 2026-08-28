@@ -1,0 +1,254 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag Name (e.g., v0.2.1)'
+        required: false
+        type: string
+      is_draft:
+        description: 'Create as a Draft Release'
+        required: true
+        type: boolean
+        default: false
+      is_prerelease:
+        description: 'Mark as a Pre-release'
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  validate:
+    name: Validate Quality & Release Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      release_version: ${{ steps.version.outputs.val }}
+      tag_name: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Code formatting verification
+        run: npm run format:check
+
+      - name: Code linting
+        run: npm run lint
+
+      - name: TypeScript typechecks
+        run: npm run typecheck
+
+      - name: Determine release version and tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          elif [ -n "${{ github.ref_name }}" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            PACKAGE_VERSION=$(node -p "require('./package.json').version")
+            TAG="v${PACKAGE_VERSION}"
+          fi
+          CLEAN_VERSION=$(echo "$TAG" | sed 's/^v//')
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "val=${CLEAN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building Release Tag: ${TAG} (Version: ${CLEAN_VERSION})"
+
+  build-platform-binaries:
+    name: Build (${{ matrix.target.platform }} - ${{ matrix.target.arch }})
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - os: windows-latest
+            platform: windows
+            arch: x64
+            build_cmd: npm run build:win
+          - os: macos-latest
+            platform: macos
+            arch: universal
+            build_cmd: npm run build:mac
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            build_cmd: npm run build:linux
+    runs-on: ${{ matrix.target.os }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libarchive-tools fakeroot dpkg
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile and package desktop binary
+        run: ${{ matrix.target.build_cmd }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional Code Signing / Notarization Secrets (macOS & Windows)
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: Generate SHA-256 Checksums (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          for file in *.exe *.dmg *.zip *.AppImage *.deb *.blockmap; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" > "${file}.sha256"
+            fi
+          done
+
+      - name: Generate SHA-256 Checksums (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd dist
+          Get-ChildItem -File -Include *.exe, *.zip, *.blockmap | ForEach-Object {
+            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
+            Set-Content -Path "$($_.FullName).sha256" -Value "$hash  $($_.Name)"
+          }
+
+      - name: Upload platform artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries-${{ matrix.target.platform }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.blockmap
+            dist/*.yml
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [validate, build-platform-binaries]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: release-binaries-*
+          merge-multiple: true
+
+      - name: Generate Master Checksums Manifest
+        run: |
+          cd release-assets
+          echo "Consolidating all SHA-256 checksums..."
+          rm -f SHA256SUMS.txt
+          for file in *.exe *.dmg *.zip *.AppImage *.deb; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" >> SHA256SUMS.txt
+            fi
+          done
+          echo "=== SHA256 Checksums ==="
+          cat SHA256SUMS.txt || true
+
+      - name: Construct Release Notes
+        id: release_notes
+        run: |
+          TAG="${{ needs.validate.outputs.tag_name }}"
+          VERSION="${{ needs.validate.outputs.release_version }}"
+
+          cat << 'EOF' > release_body.md
+          # 🚀 Oink Release ${{ needs.validate.outputs.tag_name }}
+
+          Local-first, hybrid block-markdown knowledge base and workspace for creators and developers.
+
+          ### 📦 Platform Downloads
+
+          | Platform | Architecture | File Format | Description |
+          |:---|:---|:---|:---|
+          | 🪟 **Windows** | x64 | `.exe` | Windows Installer (NSIS) |
+          | 🍏 **macOS** | Universal / Apple Silicon / Intel | `.dmg` / `.zip` | macOS Disk Image & Archive |
+          | 🐧 **Linux** | x64 | `.AppImage` / `.deb` | Linux Standalone AppImage & Debian Package |
+
+          ---
+
+          ### 🔒 Verification & Checksums
+          Verify installer integrity with SHA-256 checksums found in `SHA256SUMS.txt` attached below.
+
+          ---
+          EOF
+
+      - name: Determine Draft and Prerelease status
+        id: flags
+        run: |
+          IS_DRAFT="${{ github.event.inputs.is_draft || 'false' }}"
+          IS_PRERELEASE="${{ github.event.inputs.is_prerelease || 'false' }}"
+
+          # Auto-detect prerelease based on tag suffixes (e.g., -beta, -alpha, -rc)
+          TAG="${{ needs.validate.outputs.tag_name }}"
+          if [[ "$TAG" =~ -(alpha|beta|rc|preview|canary) ]]; then
+            IS_PRERELEASE="true"
+          fi
+
+          echo "draft=${IS_DRAFT}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.tag_name }}
+          name: 'Oink ${{ needs.validate.outputs.tag_name }}'
+          body_path: release_body.md
+          draft: ${{ steps.flags.outputs.draft == 'true' }}
+          prerelease: ${{ steps.flags.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: |
+            release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

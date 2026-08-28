@@ -178,7 +178,7 @@ function NotificationsMenuComponent(): React.JSX.Element {
           </div>
 
           {/* List of Notifications */}
-          <div className="flex flex-col gap-1 max-h-[340px] overflow-y-auto py-1">
+          <div className="flex flex-col gap-1 max-h-85 overflow-y-auto py-1">
             {notifications.length === 0 ? (
               <div className="py-8 px-4 text-center flex flex-col items-center justify-center gap-2">
                 <CheckCircle2 size={24} className="text-zinc-600" />

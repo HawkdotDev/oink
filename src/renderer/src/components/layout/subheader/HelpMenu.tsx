@@ -179,7 +179,7 @@ function HelpMenuComponent({ onOpenSettings }: HelpMenuProps): React.JSX.Element
       {/* SHORTCUTS MODAL */}
       {activeModal === 'shortcuts' && (
         <div
-          className="fixed inset-0 bg-black/65 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/65 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
           onClick={(): void => setActiveModal(null)}
         >
           <div
@@ -255,7 +255,7 @@ function HelpMenuComponent({ onOpenSettings }: HelpMenuProps): React.JSX.Element
       {/* MARKDOWN GUIDE MODAL */}
       {activeModal === 'markdown' && (
         <div
-          className="fixed inset-0 bg-black/65 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/65 backdrop-blur-sm z-9999 flex items-center justify-center p-4"
           onClick={(): void => setActiveModal(null)}
         >
           <div

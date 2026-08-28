@@ -1,44 +1,137 @@
 appId: com.oink.app
 productName: Oink
+copyright: Copyright © 2026 HawkdotDev
+
 directories:
   buildResources: build
+  output: dist
+
+protocols:
+  - name: Oink URL Scheme
+    schemes:
+      - oink
+
+fileAssociations:
+  - ext:
+      - md
+      - markdown
+    name: Markdown Document
+    description: Markdown Document
+    role: Editor
+    isPackage: false
+  - ext:
+      - oink
+    name: Oink Workspace File
+    description: Oink Knowledge Base Document
+    role: Editor
+    isPackage: false
+
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  - '!scripts/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml,package-lock.json,bun.lock}'
+  - '!{.github,docs}/**'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,tsconfig.*.tsbuildinfo}'
+
 asarUnpack:
   - resources/**
+
 win:
   icon: build/icon.ico
   executableName: Oink
+  cscLink: build/oink-dev-cert.pfx
+  cscKeyPassword: oink-desktop-signing
+  signAndEditExecutable: true
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
+
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${productName}-${version}-setup.${ext}
   shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  uninstallDisplayName: ${productName} (v${version})
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeader: build/installerHeader.bmp
+  installerHeaderIcon: build/icon.ico
+  installerSidebar: build/installerSidebar.bmp
+  uninstallerSidebar: build/installerSidebar.bmp
+  license: LICENSE
+  runAfterFinish: true
+
 mac:
+  category: public.app-category.productivity
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+        - universal
+    - target: zip
+      arch:
+        - x64
+        - arm64
+        - universal
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 140
+      y: 190
+      type: file
+    - x: 400
+      y: 190
+      type: link
+      path: /Applications
+
 linux:
+  category: Utility
+  maintainer: HawkdotDev <https://github.com/HawkdotDev>
+  mimeTypes:
+    - text/markdown
+    - application/x-oink
+    - x-scheme-handler/oink
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: github.com/HawkdotDev
-  category: Utility
+
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+deb:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
 npmRebuild: false
+
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: HawkdotDev
+  repo: mink
+  releaseType: release
