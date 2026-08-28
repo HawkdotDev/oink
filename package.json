@@ -1,6 +1,7 @@
 {
   "name": "oink",
   "displayName": "Oink",
+  "desktopName": "oink",
   "version": "0.3.0",
   "description": "Local-first, hybrid block-markdown knowledge base and workspace for creators and developers.",
   "author": {

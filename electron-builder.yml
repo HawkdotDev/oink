@@ -74,7 +74,7 @@ nsis:
 
 mac:
   category: public.app-category.productivity
-  icon: build/icon.icns
+  icon: build/icon.png
   hardenedRuntime: true
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
@@ -114,6 +114,8 @@ dmg:
 linux:
   category: Utility
   maintainer: HawkdotDev <https://github.com/HawkdotDev>
+  icon: build/icons
+  syncDesktopName: true
   mimeTypes:
     - text/markdown
     - application/x-oink
