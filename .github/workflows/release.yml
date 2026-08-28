@@ -117,17 +117,26 @@ jobs:
         run: npm ci || npm install
 
       - name: Compile and package desktop binary
-        run: ${{ matrix.target.build_cmd }}
+        shell: bash
+        run: |
+          if [ -n "$RAW_CSC_LINK" ]; then export CSC_LINK="$RAW_CSC_LINK"; fi
+          if [ -n "$RAW_CSC_KEY_PASSWORD" ]; then export CSC_KEY_PASSWORD="$RAW_CSC_KEY_PASSWORD"; fi
+          if [ -n "$RAW_WIN_CSC_LINK" ]; then export WIN_CSC_LINK="$RAW_WIN_CSC_LINK"; fi
+          if [ -n "$RAW_WIN_CSC_KEY_PASSWORD" ]; then export WIN_CSC_KEY_PASSWORD="$RAW_WIN_CSC_KEY_PASSWORD"; fi
+          if [ -n "$RAW_APPLE_ID" ]; then export APPLE_ID="$RAW_APPLE_ID"; fi
+          if [ -n "$RAW_APPLE_APP_SPECIFIC_PASSWORD" ]; then export APPLE_APP_SPECIFIC_PASSWORD="$RAW_APPLE_APP_SPECIFIC_PASSWORD"; fi
+          if [ -n "$RAW_APPLE_TEAM_ID" ]; then export APPLE_TEAM_ID="$RAW_APPLE_TEAM_ID"; fi
+          ${{ matrix.target.build_cmd }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional Code Signing / Notarization Secrets (macOS & Windows)
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          RAW_CSC_LINK: ${{ secrets.CSC_LINK }}
+          RAW_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          RAW_WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          RAW_WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          RAW_APPLE_ID: ${{ secrets.APPLE_ID }}
+          RAW_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          RAW_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Generate SHA-256 Checksums (Unix)
         if: runner.os != 'Windows'
