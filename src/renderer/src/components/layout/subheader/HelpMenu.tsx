@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import {
   HelpCircle,
-  ChevronDown,
   Keyboard,
   FileCode,
   ExternalLink,
@@ -44,18 +43,18 @@ function HelpMenuComponent({ onOpenSettings }: HelpMenuProps): React.JSX.Element
       <div className="relative" ref={menuRef}>
         <button
           type="button"
-          className={`action-pill-btn ${showHelpMenu ? 'active' : ''}`}
+          className={`action-pill-btn w-6.5 h-6.5 p-0 justify-center ${showHelpMenu ? 'active' : ''}`}
           onClick={(e): void => {
             e.stopPropagation()
             setShowHelpMenu((prev) => !prev)
           }}
           title="Help & Documentation"
+          aria-label="Help & Documentation"
         >
-          <HelpCircle size={13} className={showHelpMenu ? 'text-zinc-200' : 'text-zinc-400'} />
-          <span>Help</span>
-          <ChevronDown
-            size={11}
-            className={`transition-transform duration-150 ${showHelpMenu ? 'rotate-180' : ''}`}
+          <HelpCircle
+            size={14}
+            strokeWidth={1.75}
+            className={showHelpMenu ? 'text-zinc-200' : 'text-zinc-400'}
           />
         </button>
 

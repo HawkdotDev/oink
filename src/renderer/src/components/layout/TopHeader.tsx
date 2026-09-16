@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Minus, Square, X, Settings, FileText, Network, Home } from 'lucide-react'
-import oinkLogo from '../../assets/logo.png'
-import { ViewMode, WidgetState } from '../../types'
-import { APP_VERSION } from '../../utils/version'
-import WidgetsMenu from './subheader/WidgetsMenu'
+import React from 'react'
+import { Minus, Square, X, FileText, Network, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { ViewMode } from '../../types'
 import HelpMenu from './subheader/HelpMenu'
 import NotificationsMenu from './subheader/NotificationsMenu'
 import ViewModeMenu from './subheader/ViewModeMenu'
@@ -13,17 +10,15 @@ interface TopHeaderProps {
   viewMode: ViewMode
   onToggleViewMode: () => void
   setViewMode?: (mode: ViewMode) => void
-  onSwitchToHome?: () => void
   onSwitchToFiles?: () => void
   showTabs?: boolean
   onToggleTabs?: () => void
   showRightSidebar: boolean
   onToggleRightSidebar: () => void
-  widgetState: WidgetState
-  onToggleWidget: (widget: keyof WidgetState) => void
-  activeUnsaved: boolean
-  autoSaveEnabled: boolean
-  onToggleAutoSave: () => void
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
+  onSidebarHoverEnter?: () => void
+  onSidebarHoverLeave?: () => void
   showCover?: boolean
   showIcon?: boolean
   showFileName?: boolean
@@ -40,17 +35,15 @@ function TopHeader({
   viewMode,
   onToggleViewMode,
   setViewMode,
-  onSwitchToHome,
   onSwitchToFiles,
   showTabs = true,
   onToggleTabs,
   showRightSidebar,
   onToggleRightSidebar,
-  widgetState,
-  onToggleWidget,
-  activeUnsaved,
-  autoSaveEnabled,
-  onToggleAutoSave,
+  sidebarCollapsed = false,
+  onToggleSidebar,
+  onSidebarHoverEnter,
+  onSidebarHoverLeave,
   showCover = true,
   showIcon = true,
   showFileName = true,
@@ -61,132 +54,79 @@ function TopHeader({
   onToggleFileName,
   onToggleOnlyThisFile
 }: TopHeaderProps): React.JSX.Element {
-  const [showBrandPopover, setShowBrandPopover] = useState<boolean>(false)
-  const [showAccountMenu, setShowAccountMenu] = useState<boolean>(false)
-  const brandPopoverRef = useRef<HTMLDivElement>(null)
-  const accountMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent): void => {
-      if (brandPopoverRef.current && !brandPopoverRef.current.contains(e.target as Node)) {
-        setShowBrandPopover(false)
-      }
-      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
-        setShowAccountMenu(false)
-      }
-    }
-    if (showBrandPopover || showAccountMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return (): void => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showBrandPopover, showAccountMenu])
-
   return (
     <header
       className="top-header select-none"
       onDoubleClick={(): void => window.api?.window?.maximize?.()}
     >
-      {/* LEFT SECTION: Logo & Core View Switchers */}
+      {/* LEFT SECTION: Core View Switchers */}
       <div className="top-header-left flex items-center gap-1.5 min-w-0">
-        {/* Brand Menu Trigger Popover */}
-        <div className="relative" ref={brandPopoverRef}>
-          <button
-            type="button"
-            className={`window-brand-btn ${showBrandPopover ? 'active' : ''}`}
-            onClick={(): void => setShowBrandPopover((prev) => !prev)}
-            title="Oink Application Menu"
-          >
-            <img src={oinkLogo} alt="Oink Logo" className="w-3.5 h-3.5 object-contain" />
-            <span className="window-title font-semibold tracking-tight text-xs">Oink</span>
-          </button>
-
-          {showBrandPopover && (
-            <div className="notion-dropdown-popover brand-menu-popover">
-              <div className="dropdown-section-title">APPLICATION</div>
-              <button
-                className="notion-menu-item"
-                onClick={(): void => {
-                  setShowBrandPopover(false)
-                  if (onOpenSettings) onOpenSettings()
-                }}
-              >
-                <Settings size={13} />
-                <span>Preferences & Settings</span>
-              </button>
-              <div className="notion-menu-divider" />
-              <div className="p-2 flex items-center justify-between text-zinc-500">
-                <span className="text-xs font-semibold text-zinc-200">Oink</span>
-                <span className="text-zinc-600 text-xs">|</span>
-                <span className="text-xs text-zinc-400 font-mono">v{APP_VERSION}</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Vertical Pipe Separator */}
-        <div className="header-pipe-separator" />
-
         {/* Floating Segmented Navigation Cluster */}
         <div className="header-segmented-cluster">
-          {/* 1. Home Tab */}
-          <button
-            className={`action-pill-btn ${viewMode === 'editor' && !activeFilePath ? 'active' : ''}`}
-            onClick={(): void => {
-              if (onSwitchToHome) onSwitchToHome()
-              else if (setViewMode) setViewMode('editor')
-            }}
-            title="Knowledge Base Home (Hub)"
-          >
-            <Home
-              size={13}
-              className={
-                viewMode === 'editor' && !activeFilePath ? 'text-zinc-200' : 'text-zinc-400'
-              }
-            />
-            <span>Home</span>
-          </button>
+          {/* Close / Open Sidebar Toggle Button */}
+          {onToggleSidebar && (
+            <button
+              type="button"
+              className={`action-pill-btn w-[28.6px] h-[28.6px] p-0 justify-center ${!sidebarCollapsed ? 'active' : ''}`}
+              style={{ width: '28.6px', height: '28.6px' }}
+              onClick={onToggleSidebar}
+              onMouseEnter={onSidebarHoverEnter}
+              onMouseLeave={onSidebarHoverLeave}
+              title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
+              aria-label={sidebarCollapsed ? 'Open Sidebar' : 'Close Sidebar'}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen size={15.4} strokeWidth={1.75} className="text-zinc-400" />
+              ) : (
+                <PanelLeftClose size={15.4} strokeWidth={1.75} className="text-zinc-200" />
+              )}
+            </button>
+          )}
 
-          {/* 2. File Editor Tab */}
-          <button
-            className={`action-pill-btn ${viewMode === 'editor' && activeFilePath ? 'active' : ''}`}
-            onClick={(): void => {
-              if (onSwitchToFiles) onSwitchToFiles()
-              if (setViewMode) setViewMode('editor')
-              else if (viewMode === 'graph') onToggleViewMode()
-            }}
-            title="Document Editor & File View"
-          >
-            <FileText
-              size={13}
-              className={
-                viewMode === 'editor' && activeFilePath ? 'text-zinc-200' : 'text-zinc-400'
-              }
-            />
-            <span>Files</span>
-          </button>
+          {/* Vertical Divider after Close Sidebar Button */}
+          {onToggleSidebar && <div className="h-3.5 w-px bg-zinc-700/60 mx-0.5 shrink-0" />}
 
-          {/* 3. Knowledge Graph Tab */}
-          <button
-            className={`action-pill-btn ${viewMode === 'graph' ? 'active' : ''}`}
-            onClick={(): void => {
-              if (setViewMode) setViewMode('graph')
-              else if (viewMode === 'editor') onToggleViewMode()
-            }}
-            title="Knowledge Graph View"
-          >
-            <Network
-              size={13}
-              className={viewMode === 'graph' ? 'text-zinc-200' : 'text-zinc-400'}
-            />
-            <span>Graph</span>
-          </button>
+          {/* Files and Graph View Segmented Toggle */}
+          <div className="topbar-view-toggle">
+            {/* 1. File View Toggle */}
+            <button
+              type="button"
+              className={`topbar-view-toggle-btn ${viewMode !== 'graph' ? 'active' : ''}`}
+              onClick={(): void => {
+                if (onSwitchToFiles) onSwitchToFiles()
+                if (setViewMode) setViewMode('editor')
+                else if (viewMode === 'graph') onToggleViewMode()
+              }}
+              title="Document Editor & File View"
+            >
+              <FileText
+                size={13.5}
+                strokeWidth={1.75}
+                className={viewMode !== 'graph' ? 'text-zinc-100' : 'text-zinc-400'}
+              />
+              <span>File</span>
+            </button>
 
-          {/* Divider between Graph and the rest of tabs */}
-          <div className="header-pipe-separator opacity-40" />
+            {/* 2. Knowledge Graph View Toggle */}
+            <button
+              type="button"
+              className={`topbar-view-toggle-btn ${viewMode === 'graph' ? 'active' : ''}`}
+              onClick={(): void => {
+                if (setViewMode) setViewMode('graph')
+                else if (viewMode === 'editor') onToggleViewMode()
+              }}
+              title="Knowledge Graph View"
+            >
+              <Network
+                size={13.5}
+                strokeWidth={1.75}
+                className={viewMode === 'graph' ? 'text-zinc-100' : 'text-zinc-400'}
+              />
+              <span>Graph</span>
+            </button>
+          </div>
 
-          {/* 3. Document View Options Dropdown */}
+          {/* Document View Options Dropdown (Beside Toggle) */}
           <ViewModeMenu
             showTabs={showTabs}
             onToggleTabs={onToggleTabs}
@@ -202,18 +142,6 @@ function TopHeader({
             onToggleFileName={onToggleFileName}
             onToggleOnlyThisFile={onToggleOnlyThisFile}
           />
-
-          {/* Floating Widgets Dropdown */}
-          <WidgetsMenu
-            widgetState={widgetState}
-            onToggleWidget={onToggleWidget}
-            activeUnsaved={activeUnsaved}
-            autoSaveEnabled={autoSaveEnabled}
-            onToggleAutoSave={onToggleAutoSave}
-          />
-
-          {/* Help & Documentation Menu */}
-          <HelpMenu onOpenSettings={onOpenSettings} />
         </div>
       </div>
 
@@ -221,73 +149,11 @@ function TopHeader({
       <div className="top-header-right flex items-center gap-2">
         {/* Squircle Tool Buttons Group */}
         <div className="header-tool-cluster">
+          {/* Help & Documentation Menu */}
+          <HelpMenu onOpenSettings={onOpenSettings} />
+
           {/* Notifications Dropdown */}
           <NotificationsMenu />
-
-          {/* Settings Icon Button */}
-          <button
-            type="button"
-            className="header-action-btn"
-            onClick={(): void => (onOpenSettings ? onOpenSettings() : alert('Settings Menu'))}
-            title="Settings"
-          >
-            <Settings size={13} />
-          </button>
-
-          {/* User Profile Avatar with Account & Settings Dropdown */}
-          <div className="relative" ref={accountMenuRef}>
-            <button
-              type="button"
-              className={`header-user-avatar ${showAccountMenu ? 'active' : ''}`}
-              onClick={(): void => setShowAccountMenu((prev) => !prev)}
-              title="Account & Settings (Oink User)"
-            >
-              <span>DN</span>
-            </button>
-
-            {showAccountMenu && (
-              <div className="notion-dropdown-popover header-account-popover">
-                <div className="notion-popover-header">
-                  <img src={oinkLogo} alt="Avatar" className="notion-popover-avatar" />
-                  <div className="notion-popover-user-info">
-                    <span className="notion-popover-name">Oink User</span>
-                    <span className="notion-popover-sub">dwaipayan.codes@gmail.com</span>
-                  </div>
-                </div>
-
-                <div className="notion-menu-divider" />
-
-                <div className="notion-popover-section">
-                  <button
-                    type="button"
-                    className="notion-menu-item"
-                    onClick={(): void => {
-                      setShowAccountMenu(false)
-                      onOpenSettings?.()
-                    }}
-                  >
-                    <Settings size={14} className="text-zinc-300 shrink-0" />
-                    <span>Settings & Preferences</span>
-                  </button>
-                </div>
-
-                <div className="notion-menu-divider" />
-
-                <div className="notion-popover-footer">
-                  <button
-                    type="button"
-                    className="notion-logout-btn"
-                    onClick={(): void => {
-                      setShowAccountMenu(false)
-                      alert('Signed out of Oink workspace account.')
-                    }}
-                  >
-                    Log out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Vertical Divider */}
@@ -301,7 +167,7 @@ function TopHeader({
             onClick={(): void => window.api?.window?.minimize?.()}
             title="Minimize Window"
           >
-            <Minus size={13} />
+            <Minus size={13} strokeWidth={1.75} />
           </button>
           <button
             type="button"
@@ -309,7 +175,7 @@ function TopHeader({
             onClick={(): void => window.api?.window?.maximize?.()}
             title="Maximize / Restore Window"
           >
-            <Square size={11} />
+            <Square size={11} strokeWidth={1.75} />
           </button>
           <button
             type="button"
@@ -317,7 +183,7 @@ function TopHeader({
             onClick={(): void => window.api?.window?.close?.()}
             title="Close Application"
           >
-            <X size={13} />
+            <X size={13} strokeWidth={1.75} />
           </button>
         </div>
       </div>

@@ -169,7 +169,7 @@ function PageActionsMenu({
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        className={`action-pill-btn more-options-btn ${isOpen ? 'active' : ''}`}
+        className={`action-pill-btn w-6.5 h-6.5 p-0 justify-center more-options-btn ${isOpen ? 'active' : ''}`}
         onClick={(e): void => {
           e.stopPropagation()
           setIsOpen((prev) => !prev)
@@ -177,7 +177,11 @@ function PageActionsMenu({
         }}
         title="More Actions (Page Options)"
       >
-        <MoreHorizontal size={14} className={isOpen ? 'text-zinc-200' : 'text-zinc-300'} />
+        <MoreHorizontal
+          size={14}
+          strokeWidth={1.75}
+          className={isOpen ? 'text-zinc-200' : 'text-zinc-300'}
+        />
       </button>
 
       {isOpen && (

@@ -133,7 +133,7 @@ function NotificationsMenuComponent(): React.JSX.Element {
         onClick={(): void => setShowMenu((prev) => !prev)}
         title={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
       >
-        <Bell size={13} />
+        <Bell size={14} strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-zinc-100 rounded-full ring-2 ring-[#121215]" />
         )}

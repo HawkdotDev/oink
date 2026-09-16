@@ -31,8 +31,8 @@ function StatusBar({
   const [toastPhase, setToastPhase] = useState<'hidden' | 'visible' | 'fading'>('hidden')
   const prevUnsavedRef = useRef<boolean>(activeUnsaved)
   const prevFileRef = useRef<string | null>(activeFilePath)
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     // If the same file was unsaved and now became saved (autosave or manual save)

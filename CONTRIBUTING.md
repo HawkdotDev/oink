@@ -8,22 +8,22 @@ Whether you're fixing a bug, designing a new feature, improving documentation, o
 
 - [Code of Conduct](#code-of-conduct)
 - [How Can I Contribute?](#how-can-i-contribute)
-  - [Reporting Bugs](#reporting-bugs)
-  - [Suggesting Enhancements](#suggesting-enhancements)
-  - [Improving Documentation](#improving-documentation)
-  - [Contributing Code](#contributing-code)
+- [Reporting Bugs](#reporting-bugs)
+- [Suggesting Enhancements](#suggesting-enhancements)
+- [Improving Documentation](#improving-documentation)
+- [Contributing Code](#contributing-code)
 - [Development Setup](#development-setup)
-  - [Prerequisites](#prerequisites)
-  - [Local Installation](#local-installation)
-  - [Running in Development](#running-in-development)
+- [Prerequisites](#prerequisites)
+- [Local Installation](#local-installation)
+- [Running in Development](#running-in-development)
 - [Project Architecture](#project-architecture)
-- [Coding Standards & Conventions](#coding-standards--conventions)
-  - [TypeScript & Type Safety](#typescript--type-safety)
-  - [Linting & Formatting](#linting--formatting)
-  - [Styling & UI Aesthetics](#styling--ui-aesthetics)
+- [Coding Standards &amp; Conventions](#coding-standards--conventions)
+- [TypeScript &amp; Type Safety](#typescript--type-safety)
+- [Linting &amp; Formatting](#linting--formatting)
+- [Styling &amp; UI Aesthetics](#styling--ui-aesthetics)
 - [Commit Message Guidelines](#commit-message-guidelines)
 - [Pull Request Workflow](#pull-request-workflow)
-- [Building & Packaging](#building--packaging)
+- [Building &amp; Packaging](#building--packaging)
 
 ## Code of Conduct
 
@@ -37,11 +37,12 @@ If you find a bug or unexpected behavior:
 
 1. **Check Existing Issues**: Search the [GitHub Issues](https://github.com/HawkdotDev/oink/issues) to verify if the issue has already been reported.
 2. **Open a Detailed Issue**: If not, create a new issue using a descriptive title and include:
-   - Operating System and version (e.g., Windows 11, macOS Sequoia, Ubuntu 24.04).
-   - Oink version or commit SHA.
-   - Clear, step-by-step instructions to reproduce the bug.
-   - Expected behavior vs. actual behavior.
-   - Screenshots, screen recordings, or error logs from the Developer Tools console (`Ctrl+Shift+I` or `Cmd+Option+I`).
+
+- Operating System and version (e.g., Windows 11, macOS Sequoia, Ubuntu 24.04).
+- Oink version or commit SHA.
+- Clear, step-by-step instructions to reproduce the bug.
+- Expected behavior vs. actual behavior.
+- Screenshots, screen recordings, or error logs from the Developer Tools console (`Ctrl+Shift+I` or `Cmd+Option+I`).
 
 ### Suggesting Enhancements
 
@@ -65,26 +66,31 @@ Ready to submit code? Look for issues tagged `good first issue` or `help wanted`
 
 Ensure you have the following installed:
 
-- **Node.js**: `>= 20.0.0`
+- **Node.js**: `&gt;= 20.0.0`
 - **Package Manager**: `npm`, `bun`, or `pnpm`
-- **Git**: `>= 2.30`
+- **Git**: `&gt;= 2.30`
 
 ### Local Installation
 
 1. **Fork the repository** on GitHub: [https://github.com/HawkdotDev/oink](https://github.com/HawkdotDev/oink)
 2. **Clone your fork**:
-   ```bash
+
+```bash
    git clone https://github.com/<your-username>/oink.git
    cd oink
-   ```
-3. **Add upstream remote**:
-   ```bash
+```
+
+1. **Add upstream remote**:
+
+```bash
    git remote add upstream https://github.com/HawkdotDev/oink.git
-   ```
-4. **Install dependencies**:
-   ```bash
+```
+
+1. **Install dependencies**:
+
+```bash
    npm install
-   ```
+```
 
 ### Running in Development
 
@@ -123,22 +129,24 @@ oink/
 - **Preload (`src/preload`)**: Safely exposes IPC handlers to the renderer window via `contextBridge`.
 - **Renderer (`src/renderer`)**: Modern React 19 application managing UI components, state, block editing, and graph visualization.
 
-## Coding Standards & Conventions
+## Coding Standards &amp; Conventions
 
-### TypeScript & Type Safety
+### TypeScript &amp; Type Safety
 
 - Use strict TypeScript everywhere. Avoid `any` types wherever possible.
 - Run typechecks across all build targets before committing:
-  ```bash
-  npm run typecheck
-  ```
-  _(Runs both `npm run typecheck:node` and `npm run typecheck:web`)_
 
-### Linting & Formatting
+```bash
+  npm run typecheck
+```
+
+  *(Runs both `npm run typecheck:node` and `npm run typecheck:web`)*
+
+### Linting &amp; Formatting
 
 - Maintain code style by running ESLint and Prettier:
 
-  ```bash
+```bash
   # Check for lint issues
   npm run lint
 
@@ -150,9 +158,9 @@ oink/
 
   # Verify formatting without modifying files
   npm run format:check
-  ```
+```
 
-### Styling & UI Aesthetics
+### Styling &amp; UI Aesthetics
 
 - Oink uses a modern Brutalist dark-mode design system with Tailwind CSS 4 and scoped CSS variables.
 - Keep UI responsive, clean, and accessible. Use Lucide icons (`lucide-react`) for UI iconography.
@@ -186,28 +194,36 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ## Pull Request Workflow
 
 1. **Create a descriptive branch**:
-   ```bash
+
+```bash
    git checkout -b feat/my-new-feature
-   ```
-2. **Make your changes** and test thoroughly locally.
-3. **Validate code quality**:
-   ```bash
+```
+
+1. **Make your changes** and test thoroughly locally.
+2. **Validate code quality**:
+
+```bash
    npm run typecheck
    npm run lint
    npm run format:check
-   ```
-4. **Commit your changes**:
-   ```bash
-   git commit -m "feat(editor): add new inline callout block"
-   ```
-5. **Push to your fork**:
-   ```bash
-   git push origin feat/my-new-feature
-   ```
-6. **Submit a Pull Request** targeting the `main` branch of `HawkdotDev/oink`.
-7. **Fill out the PR description** detailing what changes were made, why, and any screenshots or testing verification steps.
+```
 
-## Building & Packaging
+1. **Commit your changes**:
+
+```bash
+   git commit -m "feat(editor): add new inline callout block"
+```
+
+1. **Push to your fork**:
+
+```bash
+   git push origin feat/my-new-feature
+```
+
+1. **Submit a Pull Request** targeting the `main` branch of `HawkdotDev/oink`.
+2. **Fill out the PR description** detailing what changes were made, why, and any screenshots or testing verification steps.
+
+## Building &amp; Packaging
 
 To verify that desktop packaging succeeds on your machine:
 

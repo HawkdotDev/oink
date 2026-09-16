@@ -41,9 +41,6 @@ export interface OinkWorkspaceSession {
   rightSidebarWidth?: number
   showTabs?: boolean
   autoSaveEnabled?: boolean
-  widgetState?: WidgetState
-  widgetPositions?: Record<string, WidgetLayout>
-  widgetZIndexes?: Record<string, number>
 }
 
 export interface OinkWorkspaceConfig {
@@ -145,22 +142,6 @@ export interface StatusStatsConfig {
   showLanguage: boolean
   showSavedBadge: boolean
 }
-
-export interface WidgetState {
-  assistant: boolean
-  stats: boolean
-  terminal: boolean
-  snippets: boolean
-  outline: boolean
-}
-
-export interface WidgetLayout {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
 export interface PersistentAppState {
   workspacePath: string | null
   workspaceName: string
@@ -179,7 +160,4 @@ export interface PersistentAppState {
   showIcon?: boolean
   showFileName?: boolean
   searchQuery?: string
-  widgetState: WidgetState
-  widgetZIndexes: Record<string, number>
-  widgetPositions: Record<string, WidgetLayout>
 }

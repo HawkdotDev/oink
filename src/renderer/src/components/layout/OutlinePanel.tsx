@@ -10,7 +10,7 @@ export interface OutlineHeadingItem {
   line?: number
 }
 
-interface OutlineWidgetProps {
+interface OutlinePanelProps {
   content?: string
   headings?: OutlineHeadingItem[]
 }
@@ -30,10 +30,10 @@ function cleanMarkdownHeading(text: string): string {
     .trim()
 }
 
-function OutlineWidgetComponent({
+function OutlinePanelComponent({
   content = '',
   headings: propHeadings
-}: OutlineWidgetProps): React.JSX.Element {
+}: OutlinePanelProps): React.JSX.Element {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeHeadingText, setActiveHeadingText] = useState<string | null>(null)
 
@@ -178,4 +178,4 @@ function OutlineWidgetComponent({
   )
 }
 
-export default React.memo(OutlineWidgetComponent)
+export default React.memo(OutlinePanelComponent)

@@ -63,18 +63,23 @@ function ViewModeMenu({
     <div className="relative" ref={viewMenuRef}>
       <button
         type="button"
-        className={`action-pill-btn ${showViewMenu ? 'active' : ''}`}
+        className={`action-pill-btn px-1.5 gap-1 justify-center ${showViewMenu ? 'active' : ''}`}
         onClick={(e): void => {
           e.stopPropagation()
           setShowViewMenu((prev) => !prev)
         }}
         title="View Options & Layout"
+        aria-label="View Options & Layout"
       >
-        <Eye size={13} className={showViewMenu ? 'text-zinc-200' : ''} />
-        <span>View</span>
+        <Eye
+          size={14}
+          strokeWidth={1.75}
+          className={showViewMenu ? 'text-zinc-200' : 'text-zinc-400'}
+        />
         <ChevronDown
           size={11}
-          className={`transition-transform duration-150 ${showViewMenu ? 'rotate-180' : ''}`}
+          strokeWidth={1.75}
+          className={`transition-transform duration-150 ${showViewMenu ? 'rotate-180 text-zinc-200' : 'text-zinc-400'}`}
         />
       </button>
 

@@ -126,15 +126,15 @@ const AVAILABLE_PLUGINS: PluginDefinition[] = [
   }
 ]
 
-interface PluginsWidgetProps {
+interface PluginsPanelProps {
   enabledPlugins: Record<string, boolean>
   onTogglePlugin: (pluginId: string) => void
 }
 
-function PluginsWidgetComponent({
+function PluginsPanelComponent({
   enabledPlugins,
   onTogglePlugin
-}: PluginsWidgetProps): React.JSX.Element {
+}: PluginsPanelProps): React.JSX.Element {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<string>('all')
 
@@ -349,4 +349,4 @@ function PluginsWidgetComponent({
   )
 }
 
-export default React.memo(PluginsWidgetComponent)
+export default React.memo(PluginsPanelComponent)

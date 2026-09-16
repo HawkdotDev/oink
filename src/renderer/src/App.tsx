@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react'
-import { AppWindow, ListTree, X, Minimize2, Image } from 'lucide-react'
+import { ListTree, X, Minimize2, Image } from 'lucide-react'
 import BlockEditor from './components/BlockEditor'
 import BannerPicker from './components/BannerPicker'
 import NotionPageHeader from './components/editor/NotionPageHeader'
@@ -8,10 +8,8 @@ import SettingsModal from './components/SettingsModal'
 import TopHeader from './components/layout/TopHeader'
 import SubHeader from './components/layout/SubHeader'
 import Sidebar from './components/layout/Sidebar'
-import ActivityRail, { ActivityRailTab } from './components/layout/ActivityRail'
 import TabBar from './components/layout/TabBar'
-import FloatingWidgetsOverlay from './components/layout/FloatingWidgetsOverlay'
-import OutlineWidget from './components/layout/OutlineWidget'
+import OutlinePanel from './components/layout/OutlinePanel'
 import StatusBar from './components/layout/StatusBar'
 
 const GraphView = lazy(() => import('./components/GraphView'))
@@ -24,7 +22,6 @@ import { markdownToHtml } from './utils/markdownConverter'
 
 import { usePersistentState } from './hooks/usePersistentState'
 import { useSidebarResize } from './hooks/useSidebarResize'
-import { useWidgetManager } from './hooks/useWidgetManager'
 import { useIndexerWorker } from './hooks/useIndexerWorker'
 import { useWorkspace } from './hooks/useWorkspace'
 import { useFileStorage } from './hooks/useFileStorage'
@@ -80,23 +77,6 @@ export default function App(): React.JSX.Element {
       return 'explorer'
     }
   })
-  const [railTab, setRailTab] = useState<ActivityRailTab>('home')
-  const [activityRailCollapsed, setActivityRailCollapsed] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('oink_activity_rail_collapsed')
-      return saved !== null ? saved === 'true' : false
-    } catch {
-      return false
-    }
-  })
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('oink_activity_rail_collapsed', String(activityRailCollapsed))
-    } catch {
-      // ignore
-    }
-  }, [activityRailCollapsed])
   const [enabledPlugins, setEnabledPlugins] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem('oink_enabled_plugins')
@@ -182,7 +162,7 @@ export default function App(): React.JSX.Element {
     autoSaveEnabled
   )
 
-  // 5. Sidebar Resize & Widget Manager Hooks
+  // 5. Sidebar Resize Hook
   const {
     sidebarWidth,
     rightSidebarWidth,
@@ -191,20 +171,6 @@ export default function App(): React.JSX.Element {
     startLeftResize,
     startRightResize
   } = useSidebarResize(savedState.sidebarWidth ?? 240, savedState.rightSidebarWidth ?? 220)
-
-  const {
-    widgetState,
-    setWidgetState,
-    widgetZIndexes,
-    widgetPositions,
-    bringWidgetToFront,
-    handleToggleWidget,
-    handleWidgetLayoutChange
-  } = useWidgetManager(
-    savedState.widgetState,
-    savedState.widgetZIndexes,
-    savedState.widgetPositions
-  )
 
   // 6. Multithreaded Background Indexer
   const { stats: workerStats, headings: workerHeadings } = useIndexerWorker(
@@ -777,10 +743,7 @@ export default function App(): React.JSX.Element {
       sidebarCollapsed,
       sidebarWidth,
       showRightSidebar,
-      rightSidebarWidth,
-      widgetState,
-      widgetZIndexes,
-      widgetPositions
+      rightSidebarWidth
     })
 
     if (workspacePath) {
@@ -793,10 +756,7 @@ export default function App(): React.JSX.Element {
         sidebarCollapsed,
         sidebarWidth,
         showRightSidebar,
-        rightSidebarWidth,
-        widgetState,
-        widgetZIndexes,
-        widgetPositions
+        rightSidebarWidth
       })
     }
   }, [
@@ -810,9 +770,6 @@ export default function App(): React.JSX.Element {
     sidebarWidth,
     showRightSidebar,
     rightSidebarWidth,
-    widgetState,
-    widgetZIndexes,
-    widgetPositions,
     saveState
   ])
 
@@ -821,29 +778,6 @@ export default function App(): React.JSX.Element {
     setViewMode('editor')
     setSidebarView('explorer')
   }, [setActiveFilePath])
-
-  const handleSelectRailTab = useCallback(
-    (tab: ActivityRailTab) => {
-      setRailTab(tab)
-      if (tab === 'home') {
-        setActiveFilePath(null)
-        setViewMode('editor')
-        setSidebarView('explorer')
-      } else if (tab === 'graph') {
-        setViewMode('graph')
-      } else if (tab === 'plugins') {
-        setViewMode('editor')
-        setSidebarView('plugins')
-      } else if (tab === 'search') {
-        setViewMode('editor')
-        setSidebarView('search')
-      } else if (tab === 'explorer') {
-        setViewMode('editor')
-        setSidebarView('explorer')
-      }
-    },
-    [setActiveFilePath]
-  )
 
   const activeUnsaved = activeFilePath
     ? !!unsavedFiles[normalizePath(activeFilePath)] ||
@@ -876,118 +810,28 @@ export default function App(): React.JSX.Element {
         viewMode={viewMode}
         onToggleViewMode={(): void => setViewMode((m) => (m === 'graph' ? 'editor' : 'graph'))}
         setViewMode={setViewMode}
-        onSwitchToHome={handleSwitchToHome}
         onSwitchToFiles={handleSwitchToFiles}
         showTabs={showTabs}
         onToggleTabs={(): void => setShowTabs((p) => !p)}
         showRightSidebar={showRightSidebar}
         onToggleRightSidebar={(): void => setShowRightSidebar((p) => !p)}
-        widgetState={widgetState}
-        onToggleWidget={handleToggleWidget}
-        activeUnsaved={activeUnsaved}
-        autoSaveEnabled={autoSaveEnabled}
-        onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
-        showCover={effectiveShowCover}
-        showIcon={effectiveShowIcon}
-        showFileName={effectiveShowFileName}
-        isOnlyThisFile={isOnlyThisFile}
-        activeFilePath={activeFilePath}
-        onToggleCover={handleToggleCover}
-        onToggleIcon={handleToggleIcon}
-        onToggleFileName={handleToggleFileName}
-        onToggleOnlyThisFile={handleToggleOnlyThisFile}
-      />
-
-      {/* ====== 2. SUB-HEADER ACTIONS & BREADCRUMBS / TABS BAR ====== */}
-      <SubHeader
-        activityRailCollapsed={activityRailCollapsed}
-        onToggleActivityRail={(): void => setActivityRailCollapsed((prev) => !prev)}
         sidebarCollapsed={effectiveSidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
         onSidebarHoverEnter={handleSidebarHoverEnter}
         onSidebarHoverLeave={handleSidebarHoverLeave}
-        workspacePath={workspacePath}
-        workspaceName={workspaceName}
-        activeFilePath={activeFilePath}
-        openFiles={openFiles}
-        unsavedFiles={unsavedFiles}
-        fileIcons={fileIcons}
-        onTabSelect={handleTabSelect}
-        onTabClose={handleTabClose}
-        onOpenWorkspace={(): void => {
-          void onOpenWorkspaceClick()
-        }}
-        autoSaveEnabled={autoSaveEnabled}
-        onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
-        onExportHTML={(): void => {
-          void handleExportHTML()
-        }}
-        onExportText={(): void => {
-          void handleExportText()
-        }}
-        onExportMarkdown={(): void => {
-          void handleExportMarkdown()
-        }}
-        onCopyLink={handleCopyLink}
-        statsConfig={statsConfig}
-        onToggleStat={handleToggleStat}
         showCover={effectiveShowCover}
         showIcon={effectiveShowIcon}
         showFileName={effectiveShowFileName}
         isOnlyThisFile={isOnlyThisFile}
+        activeFilePath={activeFilePath}
         onToggleCover={handleToggleCover}
         onToggleIcon={handleToggleIcon}
         onToggleFileName={handleToggleFileName}
         onToggleOnlyThisFile={handleToggleOnlyThisFile}
-        fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
-        editorFontFamily={editorFontFamily}
-        onChangeFontFamily={handleFontFamilyChange}
-        editorFontSize={editorFontSize}
-        onChangeFontSize={handleFontSizeChange}
-        editorLineHeight={editorLineHeight}
-        onChangeLineHeight={handleLineHeightChange}
-        editorLetterSpacing={editorLetterSpacing}
-        onChangeLetterSpacing={handleLetterSpacingChange}
-        editorParagraphSpacing={editorParagraphSpacing}
-        onChangeParagraphSpacing={handleParagraphSpacingChange}
-        editorFontWeight={editorFontWeight}
-        onChangeFontWeight={handleFontWeightChange}
-        editorTextAlign={editorTextAlign}
-        onChangeTextAlign={handleTextAlignChange}
-        isFullScreen={isFullScreen}
-        onToggleFullScreen={handleToggleFullScreen}
-        isPageLocked={isPageLocked}
-        onToggleLockPage={handleToggleLockPage}
-        onDuplicateFile={(): void => {
-          void handleDuplicateFile()
-        }}
-        onDeleteFile={(): void => {
-          void handleDeleteFile()
-        }}
-        onUndo={handleTriggerUndo}
-        onImport={(): void => {
-          void handleImportFile()
-        }}
       />
 
-      {/* ====== 3. MAIN APP CONTENT CONTAINER (Below Tabs Bar) ====== */}
+      {/* ====== 2. MAIN APP CONTENT CONTAINER ====== */}
       <div className="app-main flex flex-1 min-h-0 min-w-0 overflow-hidden">
-        {/* Activity Rail Wrapper (Entire rail collapses to 0 width when hidden) */}
-        <div
-          className={`activity-rail-wrapper relative flex shrink-0 ${activityRailCollapsed ? 'rail-collapsed' : ''}`}
-        >
-          <ActivityRail
-            activeTab={railTab}
-            onSelectTab={handleSelectRailTab}
-            sidebarCollapsed={effectiveSidebarCollapsed}
-            onToggleSidebar={handleToggleSidebar}
-            enabledPluginsCount={Object.values(enabledPlugins).filter(Boolean).length}
-            onToggleSearch={(): void =>
-              setSidebarView((prev) => (prev === 'search' ? 'explorer' : 'search'))
-            }
-          />
-        </div>
-
         {/* Sidebar Panel */}
         <Sidebar
           activeView={sidebarView}
@@ -1022,12 +866,14 @@ export default function App(): React.JSX.Element {
           onSwitchView={setSidebarView}
           onMouseEnter={handleSidebarHoverEnter}
           onMouseLeave={handleSidebarHoverLeave}
-          onToggleSidebar={handleToggleSidebar}
+          viewMode={viewMode}
+          onSwitchToHome={handleSwitchToHome}
+          onSwitchToFiles={handleSwitchToFiles}
         />
 
         {/* Editor Workspace & Split Area */}
         <div className={`editor-workspace ${effectiveSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-          {viewMode !== 'graph' && showTabs && !isFullScreen && (
+          {viewMode !== 'graph' && showTabs && !isFullScreen && openFiles.length > 0 && (
             <div className="editor-top-nav">
               <TabBar
                 openFiles={openFiles}
@@ -1045,6 +891,67 @@ export default function App(): React.JSX.Element {
               />
             </div>
           )}
+
+          {/* ====== SUB-HEADER ACTIONS & BREADCRUMBS BAR (Under Tabs Bar) ====== */}
+          <SubHeader
+            workspacePath={workspacePath}
+            workspaceName={workspaceName}
+            activeFilePath={activeFilePath}
+            onOpenWorkspace={(): void => {
+              void onOpenWorkspaceClick()
+            }}
+            autoSaveEnabled={autoSaveEnabled}
+            onToggleAutoSave={(): void => setAutoSaveEnabled((p) => !p)}
+            onExportHTML={(): void => {
+              void handleExportHTML()
+            }}
+            onExportText={(): void => {
+              void handleExportText()
+            }}
+            onExportMarkdown={(): void => {
+              void handleExportMarkdown()
+            }}
+            onCopyLink={handleCopyLink}
+            statsConfig={statsConfig}
+            onToggleStat={handleToggleStat}
+            showCover={effectiveShowCover}
+            showIcon={effectiveShowIcon}
+            showFileName={effectiveShowFileName}
+            isOnlyThisFile={isOnlyThisFile}
+            onToggleCover={handleToggleCover}
+            onToggleIcon={handleToggleIcon}
+            onToggleFileName={handleToggleFileName}
+            onToggleOnlyThisFile={handleToggleOnlyThisFile}
+            fileContent={activeFilePath ? fileContents[normalizePath(activeFilePath)] : ''}
+            editorFontFamily={editorFontFamily}
+            onChangeFontFamily={handleFontFamilyChange}
+            editorFontSize={editorFontSize}
+            onChangeFontSize={handleFontSizeChange}
+            editorLineHeight={editorLineHeight}
+            onChangeLineHeight={handleLineHeightChange}
+            editorLetterSpacing={editorLetterSpacing}
+            onChangeLetterSpacing={handleLetterSpacingChange}
+            editorParagraphSpacing={editorParagraphSpacing}
+            onChangeParagraphSpacing={handleParagraphSpacingChange}
+            editorFontWeight={editorFontWeight}
+            onChangeFontWeight={handleFontWeightChange}
+            editorTextAlign={editorTextAlign}
+            onChangeTextAlign={handleTextAlignChange}
+            isFullScreen={isFullScreen}
+            onToggleFullScreen={handleToggleFullScreen}
+            isPageLocked={isPageLocked}
+            onToggleLockPage={handleToggleLockPage}
+            onDuplicateFile={(): void => {
+              void handleDuplicateFile()
+            }}
+            onDeleteFile={(): void => {
+              void handleDeleteFile()
+            }}
+            onUndo={handleTriggerUndo}
+            onImport={(): void => {
+              void handleImportFile()
+            }}
+          />
 
           <div className="editor-center-split">
             {viewMode === 'graph' && workspacePath ? (
@@ -1191,36 +1098,6 @@ export default function App(): React.JSX.Element {
               />
             )}
 
-            {/* ====== FLOATING WIDGET WINDOWS OVERLAY ====== */}
-            <FloatingWidgetsOverlay
-              viewMode={viewMode}
-              widgetState={widgetState}
-              widgetZIndexes={widgetZIndexes}
-              widgetPositions={widgetPositions}
-              activeFilePath={activeFilePath}
-              workspacePath={workspacePath}
-              fileContents={fileContents}
-              headings={workerHeadings}
-              onUpdateFileContent={(filePath, content): void => {
-                setFileContents((prev) => ({ ...prev, [filePath]: content }))
-              }}
-              bringWidgetToFront={bringWidgetToFront}
-              handleToggleWidget={handleToggleWidget}
-              handleWidgetLayoutChange={handleWidgetLayoutChange}
-              onInsertSnippet={(snippetText): void => {
-                if (activeFilePath) {
-                  setFileContents((prev) => ({
-                    ...prev,
-                    [activeFilePath]: (prev[activeFilePath] || '') + '\n\n' + snippetText
-                  }))
-                }
-              }}
-              onDockOutline={(): void => {
-                setWidgetState((prev) => ({ ...prev, outline: false }))
-                setShowRightSidebar(true)
-              }}
-            />
-
             {/* ====== RIGHT SIDEBAR PANEL (OUTLINE) ====== */}
             {viewMode !== 'graph' && (
               <div
@@ -1241,17 +1118,6 @@ export default function App(): React.JSX.Element {
                   <div className="right-sidebar-header-actions">
                     <button
                       className="right-sidebar-btn"
-                      onClick={(): void => {
-                        setShowRightSidebar(false)
-                        setWidgetState((prev) => ({ ...prev, outline: true }))
-                        bringWidgetToFront('outline')
-                      }}
-                      title="Pop out to floating window"
-                    >
-                      <AppWindow size={13} strokeWidth={1.75} />
-                    </button>
-                    <button
-                      className="right-sidebar-btn"
                       onClick={(): void => setShowRightSidebar(false)}
                       title="Close Outline"
                     >
@@ -1261,7 +1127,7 @@ export default function App(): React.JSX.Element {
                 </div>
                 <div className="right-sidebar-content">
                   {activeFilePath ? (
-                    <OutlineWidget
+                    <OutlinePanel
                       content={fileContents[activeFilePath] || ''}
                       headings={workerHeadings}
                     />

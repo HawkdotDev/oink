@@ -123,7 +123,7 @@ function WorkspaceSelector({
 
       {/* Emoji Picker Popover for Workspace Icon */}
       {showEmojiPicker && workspacePath && onSetWorkspaceIcon && (
-        <div className="absolute top-10 left-0 z-1100">
+        <div className="absolute bottom-12 left-0 z-1100">
           <EmojiPicker
             onSelect={(emoji): void => {
               onSetWorkspaceIcon(workspacePath, emoji)

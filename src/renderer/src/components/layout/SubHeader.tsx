@@ -1,37 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import {
-  X,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Menu,
-  Route,
-  Files,
-  EyeOff,
-  Maximize2,
-  Minimize2
-} from 'lucide-react'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import ShareMenu from './subheader/ShareMenu'
 import PageActionsMenu from './subheader/PageActionsMenu'
-import { StatusStatsConfig, OpenFileInfo } from '../../types'
-import { ProfessionalFileIcon } from '../../utils/fileIconUtils'
-import { getPathKey, normalizePath } from '../../utils/pathUtils'
+import { StatusStatsConfig } from '../../types'
 
 interface SubHeaderProps {
-  activityRailCollapsed?: boolean
-  onToggleActivityRail?: () => void
-  sidebarCollapsed?: boolean
-  onToggleSidebar?: () => void
-  onSidebarHoverEnter?: () => void
-  onSidebarHoverLeave?: () => void
   workspacePath: string | null
   workspaceName: string
   activeFilePath: string | null
   fileContent?: string
-  openFiles?: OpenFileInfo[]
-  unsavedFiles?: Record<string, boolean>
-  fileIcons?: Record<string, string>
-  onTabSelect?: (filePath: string) => void
-  onTabClose?: (filePath: string) => void
   onOpenWorkspace?: () => void
   autoSaveEnabled: boolean
   onToggleAutoSave: () => void
@@ -91,21 +68,10 @@ function formatRelativeEditedTime(timestamp?: number | null): string {
 }
 
 function SubHeader({
-  activityRailCollapsed = false,
-  onToggleActivityRail,
-  sidebarCollapsed = false,
-  onToggleSidebar,
-  onSidebarHoverEnter,
-  onSidebarHoverLeave,
   workspacePath,
   workspaceName,
   activeFilePath,
   fileContent,
-  openFiles = [],
-  unsavedFiles,
-  fileIcons,
-  onTabSelect,
-  onTabClose,
   onOpenWorkspace,
   autoSaveEnabled,
   onToggleAutoSave,
@@ -174,178 +140,37 @@ function SubHeader({
     return formatRelativeEditedTime(lastEditedTime)
   }, [lastEditedTime, tick])
 
-  const [activeSubTab, setActiveSubTab] = useState<'none' | 'breadcrumbs' | 'tabs'>(() => {
-    try {
-      const saved = localStorage.getItem('oink_active_subtab')
-      if (saved === 'none' || saved === 'breadcrumbs' || saved === 'tabs') {
-        return saved
-      }
-    } catch {
-      // ignore
-    }
-    return 'breadcrumbs'
-  })
-
-  const handleSubTabChange = (tab: 'none' | 'breadcrumbs' | 'tabs'): void => {
-    setActiveSubTab(tab)
-    try {
-      localStorage.setItem('oink_active_subtab', tab)
-    } catch {
-      // ignore
-    }
-  }
-
   return (
     <div className="app-actions-bar select-none">
-      {/* Left Application Brand Logo & Navigation Breadcrumbs / File Tabs */}
+      {/* Left Application Navigation Breadcrumbs */}
       <div className="actions-bar-left flex items-center gap-1.5 overflow-hidden">
-        {/* Toggle Activity Rail Button */}
-        {onToggleActivityRail && (
-          <button
-            type="button"
-            className={`sidebar-toggle-bar-btn ${!activityRailCollapsed ? 'active' : ''}`}
-            onClick={onToggleActivityRail}
-            title={activityRailCollapsed ? 'Show Activity Rail' : 'Hide Activity Rail'}
-          >
-            <Menu size={15} strokeWidth={1.75} />
-          </button>
-        )}
+        {(activeFilePath || workspacePath) && (
+          <div className="nav-breadcrumbs">
+            {/* First Folder in Breadcrumbs (Workspace Root) */}
+            <div
+              className="breadcrumb-item workspace-root"
+              title={`Workspace: ${currentDisplayName}`}
+              onClick={onOpenWorkspace}
+            >
+              <span className="max-w-35 truncate">{currentDisplayName}</span>
+            </div>
 
-        {/* Open / Close Sidebar Button */}
-        {onToggleSidebar && (
-          <button
-            type="button"
-            className={`sidebar-toggle-bar-btn ${!sidebarCollapsed ? 'active' : ''}`}
-            onClick={onToggleSidebar}
-            onMouseEnter={onSidebarHoverEnter}
-            onMouseLeave={onSidebarHoverLeave}
-            title={sidebarCollapsed ? 'Open Sidebar (Ctrl+B)' : 'Close Sidebar (Ctrl+B)'}
-          >
-            {sidebarCollapsed ? (
-              <PanelLeftOpen size={15} strokeWidth={1.75} />
-            ) : (
-              <PanelLeftClose size={15} strokeWidth={1.75} />
-            )}
-          </button>
-        )}
-
-        {/* 3 Segmented Tabs: None (EyeOff icon), Breadcrumbs (Route icon) and Tabs (Files icon) */}
-        <div className="subheader-tab-cluster">
-          <button
-            type="button"
-            className={`subheader-tab-btn ${activeSubTab === 'none' ? 'active' : ''}`}
-            onClick={(): void => handleSubTabChange('none')}
-            title="None (Hide Breadcrumbs & Tabs)"
-          >
-            <EyeOff size={13} strokeWidth={1.8} />
-          </button>
-          <button
-            type="button"
-            className={`subheader-tab-btn ${activeSubTab === 'breadcrumbs' ? 'active' : ''}`}
-            onClick={(): void => handleSubTabChange('breadcrumbs')}
-            title="Display Breadcrumbs Path"
-          >
-            <Route size={13} strokeWidth={1.8} />
-          </button>
-          <button
-            type="button"
-            className={`subheader-tab-btn ${activeSubTab === 'tabs' ? 'active' : ''}`}
-            onClick={(): void => handleSubTabChange('tabs')}
-            title="Display Open File Tabs"
-          >
-            <Files size={13} strokeWidth={1.8} />
-            {activeSubTab === 'tabs' && openFiles.length > 0 && (
-              <span className="text-[10px] px-1 py-0.2 bg-zinc-800 text-zinc-300 border border-zinc-700 font-mono ml-0.5">
-                {openFiles.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Vertical Divider (shown only when breadcrumbs or tabs are active) */}
-        {activeSubTab !== 'none' && <div className="header-pipe-separator" />}
-
-        {/* Dynamic Display: Either Breadcrumbs Path, Open Document Tabs, or None */}
-        {activeSubTab === 'tabs' ? (
-          openFiles.length > 0 ? (
-            <div className="subheader-file-tabs flex items-center overflow-x-auto flex-1 min-w-0">
-              {openFiles.map((file) => {
-                const isActive = activeFilePath === file.path
-                const isUnsaved = unsavedFiles
-                  ? !!unsavedFiles[file.path] ||
-                    !!unsavedFiles[getPathKey(file.path)] ||
-                    !!unsavedFiles[normalizePath(file.path)]
-                  : false
-                const rel = file.path
-                  .toLowerCase()
-                  .replace((workspacePath || '').toLowerCase(), '')
-                  .replace(/^[\\/]/, '')
-                const customIcon = fileIcons ? fileIcons[rel] : undefined
-
-                return (
+            {relativeParts.map((part, idx) => {
+              const isLast = idx === relativeParts.length - 1
+              return (
+                <React.Fragment key={idx}>
+                  <span className="breadcrumb-separator">/</span>
                   <div
-                    key={file.path}
-                    className={`subheader-tab-item ${isActive ? 'active' : ''} ${isUnsaved ? 'unsaved' : ''}`}
-                    onClick={(): void => onTabSelect?.(file.path)}
-                    title={file.path}
+                    className={`breadcrumb-item ${isLast ? 'active-file' : 'directory'}`}
+                    title={part}
                   >
-                    <span className="subheader-tab-item-icon">
-                      {customIcon ? (
-                        <span className="text-[12px]">{customIcon}</span>
-                      ) : (
-                        <ProfessionalFileIcon fileName={file.name} className="scale-[0.85]" />
-                      )}
-                    </span>
-                    <span className="subheader-tab-item-name">{file.name}</span>
-                    {onTabClose && (
-                      <button
-                        type="button"
-                        className="subheader-tab-item-close"
-                        onClick={(e): void => {
-                          e.stopPropagation()
-                          onTabClose(file.path)
-                        }}
-                        title="Close Tab"
-                      >
-                        <X size={11} />
-                      </button>
-                    )}
+                    <span className="truncate max-w-44">{part}</span>
                   </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="text-[11px] text-zinc-500 italic px-1">No open tabs</div>
-          )
-        ) : activeSubTab === 'breadcrumbs' ? (
-          (activeFilePath || workspacePath) && (
-            <div className="nav-breadcrumbs">
-              {/* First Folder in Breadcrumbs (Workspace Root) */}
-              <div
-                className="breadcrumb-item workspace-root"
-                title={`Workspace: ${currentDisplayName}`}
-                onClick={onOpenWorkspace}
-              >
-                <span className="max-w-35 truncate">{currentDisplayName}</span>
-              </div>
-
-              {relativeParts.map((part, idx) => {
-                const isLast = idx === relativeParts.length - 1
-                return (
-                  <React.Fragment key={idx}>
-                    <span className="breadcrumb-separator">/</span>
-                    <div
-                      className={`breadcrumb-item ${isLast ? 'active-file' : 'directory'}`}
-                      title={part}
-                    >
-                      <span className="truncate max-w-44">{part}</span>
-                    </div>
-                  </React.Fragment>
-                )
-              })}
-            </div>
-          )
-        ) : null}
+                </React.Fragment>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Right Toolbar Actions */}
@@ -369,14 +194,14 @@ function SubHeader({
         {onToggleFullScreen && (
           <button
             type="button"
-            className={`action-pill-btn fullscreen-btn ${isFullScreen ? 'active' : ''}`}
+            className={`action-pill-btn w-6.5 h-6.5 p-0 justify-center fullscreen-btn ${isFullScreen ? 'active' : ''}`}
             onClick={onToggleFullScreen}
             title={isFullScreen ? 'Exit Full Screen (Esc / F11)' : 'Enter Full Screen (F11)'}
           >
             {isFullScreen ? (
-              <Minimize2 size={13} strokeWidth={1.75} className="text-zinc-200" />
+              <Minimize2 size={14} strokeWidth={1.75} className="text-zinc-200" />
             ) : (
-              <Maximize2 size={13} strokeWidth={1.75} className="text-zinc-300" />
+              <Maximize2 size={14} strokeWidth={1.75} className="text-zinc-300" />
             )}
           </button>
         )}

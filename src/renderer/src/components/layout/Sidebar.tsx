@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
+import type { ViewMode } from '../../types'
 import SidebarHeader from './sidebar/SidebarHeader'
 import SidebarBody from './sidebar/SidebarBody'
+import SidebarFooter from './sidebar/SidebarFooter'
 import type { SidebarViewMode } from './sidebar/SidebarBody'
 
 export type { SidebarViewMode }
@@ -32,7 +34,9 @@ interface SidebarProps {
   onSwitchView?: (view: SidebarViewMode) => void
   onMouseEnter?: () => void
   onMouseLeave?: () => void
-  onToggleSidebar?: () => void
+  viewMode?: ViewMode
+  onSwitchToHome?: () => void
+  onSwitchToFiles?: () => void
 }
 
 function Sidebar({
@@ -62,10 +66,27 @@ function Sidebar({
   onSwitchView,
   onMouseEnter,
   onMouseLeave,
-  onToggleSidebar
+  viewMode = 'editor',
+  onSwitchToHome,
+  onSwitchToFiles
 }: SidebarProps): React.JSX.Element {
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [activeSubTab, setActiveSubTab] = useState<'folders' | 'tags'>('folders')
+  const activeSubTab: 'home' | 'folders' | 'search' =
+    activeView === 'search'
+      ? 'search'
+      : viewMode === 'editor' && !activeFilePath
+        ? 'home'
+        : 'folders'
+
+  const handleSelectSubTab = (tab: 'home' | 'folders' | 'search'): void => {
+    if (tab === 'home') {
+      onSwitchToHome?.()
+    } else if (tab === 'search') {
+      onSwitchView?.('search')
+    } else {
+      onSwitchView?.('explorer')
+      onSwitchToFiles?.()
+    }
+  }
 
   return (
     <aside
@@ -84,32 +105,13 @@ function Sidebar({
           minWidth: `${sidebarWidth}px`
         }}
       >
-        {/* Top Action Row: Header + Workspace Selector + Search + SubTab Switcher */}
-        <SidebarHeader
-          activeView={activeView}
-          workspacePath={workspacePath}
-          workspaceName={workspaceName}
-          workspaceIcons={workspaceIcons}
-          onSetWorkspaceIcon={onSetWorkspaceIcon}
-          recentWorkspaces={recentWorkspaces}
-          onOpenWorkspace={onOpenWorkspace}
-          onCloseWorkspace={onCloseWorkspace}
-          onSwitchWorkspace={onSwitchWorkspace}
-          onRemoveRecentWorkspace={onRemoveRecentWorkspace}
-          onRenameWorkspace={onRenameWorkspace}
-          onCreateFileAtRoot={onCreateFileAtRoot}
-          onToggleSidebar={onToggleSidebar}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          activeSubTab={activeSubTab}
-          onSelectSubTab={setActiveSubTab}
-        />
+        {/* Top Action Row: SubTab Switcher (Home / Folders / Search) */}
+        <SidebarHeader activeSubTab={activeSubTab} onSelectSubTab={handleSelectSubTab} />
 
-        {/* Main Body Area: Tree or Tags View */}
+        {/* Main Body Area: Tree or Search View */}
         <SidebarBody
           activeView={activeView}
           activeSubTab={activeSubTab}
-          searchQuery={searchQuery}
           workspacePath={workspacePath}
           activeFilePath={activeFilePath}
           onCreateFileAtRoot={onCreateFileAtRoot}
@@ -121,6 +123,23 @@ function Sidebar({
           onOpenWorkspace={onOpenWorkspace}
           onOpenSettings={onOpenSettings}
           onSwitchView={onSwitchView}
+          onSelectSubTab={handleSelectSubTab}
+        />
+
+        {/* Bottom Pinned Footer: Workspace Selector Dropdown + Settings Button */}
+        <SidebarFooter
+          workspacePath={workspacePath}
+          workspaceName={workspaceName}
+          workspaceIcons={workspaceIcons}
+          onSetWorkspaceIcon={onSetWorkspaceIcon}
+          recentWorkspaces={recentWorkspaces}
+          onOpenWorkspace={onOpenWorkspace}
+          onCloseWorkspace={onCloseWorkspace}
+          onSwitchWorkspace={onSwitchWorkspace}
+          onRemoveRecentWorkspace={onRemoveRecentWorkspace}
+          onRenameWorkspace={onRenameWorkspace}
+          onCreateFileAtRoot={onCreateFileAtRoot}
+          onOpenSettings={onOpenSettings}
         />
       </div>
 

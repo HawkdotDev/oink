@@ -208,7 +208,7 @@ function BlockEditorComponent({
     }
   }
 
-  const changeDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const changeDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pendingApiRef = useRef<any>(null)
 

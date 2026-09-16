@@ -1,106 +1,250 @@
-# Oink Codebase Deep Analysis, Audit & Optimization Roadmap
+# Contributing to Oink
 
-This document provides a comprehensive technical audit of the **Oink** desktop application codebase, covering architecture, performance bottlenecks, memory management, security boundaries, and the verified implementation status.
+Thank you for your interest in contributing to **Oink**! We are building an open, local-first, hybrid block-markdown workspace, and community contributions are essential to making it better for everyone.
 
-## 1. Critical Performance & Runtime Bottlenecks
+Whether you're fixing a bug, designing a new feature, improving documentation, or reporting an issue, your help is warmly welcomed.
 
-### A. Re-render & Redundant Disk Read Loop on File Modifications
+## Table of Contents
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/renderer/src/App.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/App.tsx)
-- **Resolution:**
-  Refactored `loadFileContent` to leverage a synchronized `fileContentsRef` and functional state updates (`setFileContents(prev => ...)`). Removed `fileContents` from the callback's dependency array and optimized the open files re-hydration effect to only load missing entries.
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+- [Reporting Bugs](#reporting-bugs)
+- [Suggesting Enhancements](#suggesting-enhancements)
+- [Improving Documentation](#improving-documentation)
+- [Contributing Code](#contributing-code)
+- [Development Setup](#development-setup)
+- [Prerequisites](#prerequisites)
+- [Local Installation](#local-installation)
+- [Running in Development](#running-in-development)
+- [Project Architecture](#project-architecture)
+- [Coding Standards &amp; Conventions](#coding-standards--conventions)
+- [TypeScript &amp; Type Safety](#typescript--type-safety)
+- [Linting &amp; Formatting](#linting--formatting)
+- [Styling &amp; UI Aesthetics](#styling--ui-aesthetics)
+- [Commit Message Guidelines](#commit-message-guidelines)
+- [Pull Request Workflow](#pull-request-workflow)
+- [Building &amp; Packaging](#building--packaging)
 
-### B. Synchronous Main Thread Freezing during Graph Data Generation
+## Code of Conduct
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/main/index.ts`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/main/index.ts)
-- **Resolution:**
-  Converted `getMarkdownFilesAsync` and `fs:getGraphData` to fully asynchronous operations using `fs.promises.readdir` and parallel `fs.promises.readFile`. Implemented an in-memory `Map<string, string>` (lowercase note title $\rightarrow$ node ID) for $O(1)$ link resolution.
+We are committed to providing a welcoming, inclusive, and harassment-free environment for all contributors. Please be respectful, constructive, and collaborative in all discussions and interactions.
 
-### C. Unbounded $O(N^2)$ Canvas Simulation Loop
+## How Can I Contribute?
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/renderer/src/components/GraphView.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/components/GraphView.tsx)
-- **Resolution:**
-  Integrated kinetic energy calculation ($\sum (v_x^2 + v_y^2)$). When energy drops below the sleep threshold ($\epsilon = 0.005$) and no interaction is active, the animation loop automatically pauses, dropping idle CPU usage to 0%. Dynamic wake triggers re-activate physics on user interactions.
+### Reporting Bugs
 
-### D. Missing High-DPI (Retina) Canvas Scaling
+If you find a bug or unexpected behavior:
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/renderer/src/components/GraphView.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/components/GraphView.tsx)
-- **Resolution:**
-  Canvas dimensions are dynamically scaled by `window.devicePixelRatio` with 2D context scaling (`ctx.scale(dpr, dpr)`), ensuring ultra-crisp node rendering and typography on 4K, Retina, and scaled Windows displays.
+1. **Check Existing Issues**: Search the [GitHub Issues](https://github.com/HawkdotDev/oink/issues) to verify if the issue has already been reported.
+2. **Open a Detailed Issue**: If not, create a new issue using a descriptive title and include:
 
-## 2. Architecture, State Management & Dead Code
+- Operating System and version (e.g., Windows 11, macOS Sequoia, Ubuntu 24.04).
+- Oink version or commit SHA.
+- Clear, step-by-step instructions to reproduce the bug.
+- Expected behavior vs. actual behavior.
+- Screenshots, screen recordings, or error logs from the Developer Tools console (`Ctrl+Shift+I` or `Cmd+Option+I`).
 
-### A. Monolithic `App.tsx` Component
+### Suggesting Enhancements
 
-- **Status:** **RESOLVED**
-- **File:** [`src/renderer/src/App.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/App.tsx)
-- **Resolution:**
-  Modularized responsibilities using dedicated hooks (`useWidgetManager`, `useIndexerWorker`, `useSidebarResize`, `usePersistentState`), clean prop interfaces, and isolated components.
+Feature requests are always welcome! When suggesting a feature:
 
-### B. Duplicate Heading Extraction in Outline Widget
+- Explain **why** the feature is valuable and what problem it solves.
+- Describe how you envision the user experience and interface working.
+- Keep in mind Oink's core principles: **local-first privacy**, **plain-text portability**, and **high performance**.
 
-- **Status:** **RESOLVED**
-- **File:** [`src/renderer/src/components/layout/OutlineWidget.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/components/layout/OutlineWidget.tsx)
-- **Resolution:**
-  `OutlineWidget` directly consumes worker-parsed `headings` from `useIndexerWorker`, offloading markdown splitting from the main UI thread.
+### Improving Documentation
 
-### C. Dead Code & Unused Dependencies
+Documentation improvements (fixing typos, clarifying setup instructions, adding code examples, or expanding guides) are great first-time contributions.
 
-- **Status:** **RESOLVED**
-- **Resolution:**
-  Removed unused packages (`@monaco-editor/react`), cleaned orphaned components, and ensured all active components are linked and bundled properly.
+### Contributing Code
 
-## 3. Storage, File I/O & Media Handling
+Ready to submit code? Look for issues tagged `good first issue` or `help wanted` to get started.
 
-### A. Base64 DataURL Image Inlining
+## Development Setup
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/renderer/src/components/BlockEditor.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/components/BlockEditor.tsx) & [`src/main/index.ts`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/main/index.ts)
-- **Resolution:**
-  Implemented `fs:saveAttachment` IPC handler. Dropped or pasted media is saved directly to `<workspace>/assets/` with relative markdown image paths (`![image](assets/...)`).
+### Prerequisites
 
-### B. Deprecated DOM APIs in Block Editor
+Ensure you have the following installed:
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/renderer/src/components/BlockEditor.tsx`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/renderer/src/components/BlockEditor.tsx)
-- **Resolution:**
-  Replaced deprecated `document.execCommand('insertLineBreak')` with standard Selection/Range DOM element insertions, and replaced `document.caretRangeFromPoint` with modern `document.caretPositionFromPoint` with fallback.
+- **Node.js**: `&gt;= 20.0.0`
+- **Package Manager**: `npm`, `bun`, or `pnpm`
+- **Git**: `&gt;= 2.30`
 
-## 4. Security & Electron Hardening
+### Local Installation
 
-### A. Path Traversal Validation
+1. **Fork the repository** on GitHub: [https://github.com/HawkdotDev/oink](https://github.com/HawkdotDev/oink)
+2. **Clone your fork**:
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/main/index.ts`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/main/index.ts)
-- **Resolution:**
-  All filesystem IPC handlers execute through `validatePath()` to sanitize inputs, normalize directory separators, and prevent null-byte attacks.
+```bash
+   git clone https://github.com/<your-username>/oink.git
+   cd oink
+```
 
-### B. Window Control IPC Listener Deduplication
+1. **Add upstream remote**:
 
-- **Status:** **RESOLVED**
-- **File & Lines:** [`src/main/index.ts`](file:///c:/Users/dwaip/OneDrive/Documents/Application/src/main/index.ts)
-- **Resolution:**
-  Window control IPC handlers (`window:minimize`, `window:maximize`, `window:close`, `window:toggleFullScreen`, `window:isFullScreen`) are registered once inside `app.whenReady()` outside `createWindow()`.
+```bash
+   git remote add upstream https://github.com/HawkdotDev/oink.git
+```
 
----
+1. **Install dependencies**:
 
-## Action Matrix & Verification Summary
+```bash
+   npm install
+```
 
-| Item    | Optimization                                        | Target File(s)                     | Status        | Benefit                                               |
-| :------ | :-------------------------------------------------- | :--------------------------------- | :------------ | :---------------------------------------------------- |
-| **1.A** | Fix re-render & disk read loop in `loadFileContent` | `App.tsx`                          | **Completed** | Zero redundant disk I/O on keystrokes                 |
-| **1.B** | Async graph data generation & $O(1)$ lookup         | `src/main/index.ts`                | **Completed** | UI never freezes when opening Graph                   |
-| **1.C** | Graph simulation energy cooling / sleep             | `GraphView.tsx`                    | **Completed** | 0% idle CPU usage on background graph                 |
-| **1.D** | High-DPI canvas retina scaling                      | `GraphView.tsx`                    | **Completed** | Ultra-sharp text and nodes on all displays            |
-| **2.A** | Modularized state architecture                      | `App.tsx`, `hooks/`                | **Completed** | Clean separation of concerns                          |
-| **2.B** | Offload heading parsing to Web Worker               | `OutlineWidget.tsx`                | **Completed** | Smooth typing without main-thread parsing             |
-| **2.C** | Dead code and unused dependency cleanup             | `package.json`, `components/`      | **Completed** | Clean bundle and project structure                    |
-| **3.A** | Local workspace asset attachment saving             | `BlockEditor.tsx`, `main/index.ts` | **Completed** | Lightweight markdown files without base64 bloat       |
-| **3.B** | Modern standard Selection/Range DOM APIs            | `BlockEditor.tsx`                  | **Completed** | Future-proof, standard compliant editor               |
-| **4.A** | Path traversal & validation security                | `src/main/index.ts`                | **Completed** | Hardened Electron IPC boundaries                      |
-| **4.B** | Window IPC listener deduplication                   | `src/main/index.ts`                | **Completed** | Clean singleton event registration                    |
-| **5.A** | Interactive Quick Terminal engine                   | `QuickTerminalWidget.tsx`          | **Completed** | Built-in CLI commands (`help`, `stats`, `calc`, etc.) |
+### Running in Development
+
+Start the Electron + Vite development server with Hot Module Replacement (HMR):
+
+```bash
+npm run dev
+```
+
+## Project Architecture
+
+Oink is structured into three primary layers using `electron-vite`:
+
+```
+oink/
+├── electron-builder.yml        # Distribution and installer configuration
+├── electron.vite.config.ts     # Multi-target Vite configuration
+├── src/
+│   ├── main/                   # Electron Main process (native window lifecycle, IPC, local FS)
+│   │   └── index.ts
+│   ├── preload/                # Secure IPC Context Isolation bridge
+│   │   ├── index.ts
+│   │   └── index.d.ts
+│   └── renderer/               # React 19 Client Application
+│       ├── index.html          # HTML shell
+│       └── src/
+│           ├── assets/         # CSS tokens, base styles, branding assets
+│           ├── components/     # UI components (Editor, Graph, Sidebar, Modals, Widgets)
+│           ├── hooks/          # Custom React hooks & state persistence
+│           ├── types/          # Shared TypeScript type definitions
+│           ├── utils/          # Markdown/Frontmatter parser, wikilink extractor, path utils
+│           └── workers/        # Dedicated web workers (graph parsing, async indexing)
+```
+
+- **Main Process (`src/main`)**: Handles native file system operations, window management, and native system dialogs. Keep business logic minimal here; expose security-bounded IPC channels.
+- **Preload (`src/preload`)**: Safely exposes IPC handlers to the renderer window via `contextBridge`.
+- **Renderer (`src/renderer`)**: Modern React 19 application managing UI components, state, block editing, and graph visualization.
+
+## Coding Standards &amp; Conventions
+
+### TypeScript &amp; Type Safety
+
+- Use strict TypeScript everywhere. Avoid `any` types wherever possible.
+- Run typechecks across all build targets before committing:
+
+```bash
+  npm run typecheck
+```
+
+  *(Runs both `npm run typecheck:node` and `npm run typecheck:web`)*
+
+### Linting &amp; Formatting
+
+- Maintain code style by running ESLint and Prettier:
+
+```bash
+  # Check for lint issues
+  npm run lint
+
+  # Automatically fix lint issues
+  npm run lint:fix
+
+  # Format all files
+  npm run format
+
+  # Verify formatting without modifying files
+  npm run format:check
+```
+
+### Styling &amp; UI Aesthetics
+
+- Oink uses a modern Brutalist dark-mode design system with Tailwind CSS 4 and scoped CSS variables.
+- Keep UI responsive, clean, and accessible. Use Lucide icons (`lucide-react`) for UI iconography.
+- Avoid introducing unnecessary heavy external dependencies.
+
+## Commit Message Guidelines
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <subject>
+```
+
+### Common Types
+
+- `feat`: A new feature or capability
+- `fix`: A bug fix
+- `docs`: Documentation changes only
+- `style`: Changes that do not affect the meaning of the code (formatting, whitespace, etc.)
+- `refactor`: Code changes that neither fix a bug nor add a feature
+- `perf`: Performance improvements
+- `test`: Adding or correcting tests
+- `chore`: Build tasks, dependency updates, configuration changes
+
+### Examples
+
+- `feat(graph): add physics dampening toggle for large node graphs`
+- `fix(editor): resolve markdown frontmatter serialization glitch`
+- `docs: update setup instructions in CONTRIBUTING.md`
+
+## Pull Request Workflow
+
+1. **Create a descriptive branch**:
+
+```bash
+   git checkout -b feat/my-new-feature
+```
+
+1. **Make your changes** and test thoroughly locally.
+2. **Validate code quality**:
+
+```bash
+   npm run typecheck
+   npm run lint
+   npm run format:check
+```
+
+1. **Commit your changes**:
+
+```bash
+   git commit -m "feat(editor): add new inline callout block"
+```
+
+1. **Push to your fork**:
+
+```bash
+   git push origin feat/my-new-feature
+```
+
+1. **Submit a Pull Request** targeting the `main` branch of `HawkdotDev/oink`.
+2. **Fill out the PR description** detailing what changes were made, why, and any screenshots or testing verification steps.
+
+## Building &amp; Packaging
+
+To verify that desktop packaging succeeds on your machine:
+
+```bash
+# Package directory without creating installer (fast verification)
+npm run build:unpack
+
+# Build Windows installer (.exe)
+npm run build:win
+
+# Build macOS package (.dmg / .zip)
+npm run build:mac
+
+# Build Linux package (.AppImage / .deb)
+npm run build:linux
+```
+
+All compiled binaries will be output to the `dist/` directory.
+
+## Questions or Need Help?
+
+Feel free to open an issue or start a discussion on our [GitHub Discussions / Issues](https://github.com/HawkdotDev/oink/issues).
+
+Thank you for helping build **Oink**!

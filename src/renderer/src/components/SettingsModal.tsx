@@ -13,7 +13,7 @@ import {
   RotateCcw,
   Blocks
 } from 'lucide-react'
-import PluginsWidget from './layout/PluginsWidget'
+import PluginsPanel from './layout/PluginsPanel'
 import oinkLogo from '../assets/logo.png'
 import { APP_VERSION } from '../utils/version'
 
@@ -149,8 +149,6 @@ const SHORTCUT_LIST: ShortcutItem[] = [
   { keyCombo: 'Ctrl + B', description: 'Toggle explorer sidebar', category: 'Layout' },
   { keyCombo: 'Ctrl + ,', description: 'Open Settings & Preferences', category: 'General' },
   { keyCombo: 'Ctrl + Shift + G', description: 'Toggle Knowledge Graph view', category: 'View' },
-  { keyCombo: 'Ctrl + Shift + A', description: 'Toggle AI Assistant panel', category: 'Layout' },
-  { keyCombo: 'Ctrl + `', description: 'Toggle Quick Terminal widget', category: 'Widgets' },
   { keyCombo: 'Ctrl + Shift + N', description: 'Create new markdown document', category: 'Files' },
   { keyCombo: 'Ctrl + Shift + D', description: 'Toggle Diff preview mode', category: 'Editor' },
   { keyCombo: 'Ctrl + W', description: 'Close active tab', category: 'Tabs' },
@@ -868,7 +866,7 @@ export default function SettingsModal({
                 </div>
 
                 <div className="flex-1 overflow-hidden border border-zinc-800/80 bg-zinc-950/40">
-                  <PluginsWidget
+                  <PluginsPanel
                     enabledPlugins={enabledPlugins}
                     onTogglePlugin={onTogglePlugin || ((): void => {})}
                   />

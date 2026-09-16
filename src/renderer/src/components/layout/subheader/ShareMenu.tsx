@@ -53,9 +53,10 @@ function ShareMenu({ activeFilePath, onCopyLink }: ShareMenuProps): React.JSX.El
         }}
         title="Share & Collaborate"
       >
-        <Share2 size={13} strokeWidth={1.75} className="shrink-0 text-zinc-300" />
+        <Share2 size={14} strokeWidth={1.75} className="shrink-0 text-zinc-300" />
         <ChevronDown
-          size={10}
+          size={11}
+          strokeWidth={1.75}
           className={`transition-transform duration-150 text-zinc-400 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>

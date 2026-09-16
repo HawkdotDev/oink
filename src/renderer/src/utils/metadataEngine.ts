@@ -52,7 +52,7 @@ class AsyncOinkMetadataEngine {
     customProps: {}
   }
   private currentWorkspacePath: string | null = null
-  private saveDebounceTimer: NodeJS.Timeout | null = null
+  private saveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     this.initWorker()

@@ -227,8 +227,6 @@ export function registerFileSystemHandlers(): void {
 
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
     const validDir = validatePath(dirPath)
-    await migrateLegacyNotieFolder(validDir)
-    await ensureOinkDirectoryAndConfig(validDir)
     try {
       const entries = await fs.readdir(validDir, { withFileTypes: true })
       return entries
